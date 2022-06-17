@@ -61,6 +61,10 @@ public class BotPlayer extends Player {
         }
     }
 
+    public List<Integer> getHand() {
+        return hand;
+    }
+
     @Override
     public void StatusChanged(GameStatus status) {
         this.time = LocalDateTime.now();

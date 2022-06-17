@@ -5,8 +5,7 @@ import server.logic.model.BotPlayer;
 import server.logic.model.PlayerInfo;
 
 import java.security.SecureRandom;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class TheMindGame implements Runnable {
     private GameStatus status;
@@ -130,8 +129,7 @@ public class TheMindGame implements Runnable {
         setPlayers();
         this.ChangeStatus(GameStatus.Starting);
         this.DealHeartCards();
-        ChangeLevel();
-        runPlayersStartMethod();
+        playRound();
         return "Success";
     }
 
@@ -259,13 +257,72 @@ public class TheMindGame implements Runnable {
         return this.usedCards.size();
     }
 
+    private void playRound() {
+        for (int i = 1; i <= 12; i++) {
+            if (this.heartCards == 0) return;
+            ChangeLevel();
+            for (int j = 1; j < playerNumber * i; j++) {
+                if (!useNinjaCard()) {
+                    runPlayersStartMethod();
+                    sendGameStatus();
+                }
+            }
+        }
+    }
+
+    private boolean useNinjaCard() {
+        if (ninjaCards == 0) return false;
+        final boolean[] useNinjaCard1 = new boolean[1];
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                boolean useNinjaCard = true;
+                for (ClientManager clientManager : clientManagers) {
+                    if (!clientManager.isUsingNinjaCard())  {
+                        useNinjaCard = false;
+                        break;
+                    }
+                }
+                useNinjaCard1[0] = useNinjaCard;
+            }
+        }, 7000);
+        if (useNinjaCard1[0]) {
+            List<Integer> thisRoundCards = new LinkedList<>();
+            for (PlayerInfo player : players) {
+                try {
+                    int card = Collections.min(player.getHand());
+                    thisRoundCards.add(card);
+                    player.getHand().remove(card);
+                } catch (Exception ignored) {}
+            }
+            for (BotPlayer bot : botPlayers) {
+                try {
+                    int card = Collections.min(bot.getHand());
+                    thisRoundCards.add(card);
+                    bot.getHand().remove(card);
+                } catch (Exception ignored) {}
+            }
+            this.usedCards.removeAll(thisRoundCards);
+            this.lastPlayedCard = Collections.max(thisRoundCards);
+            return true;
+        }
+        return false;
+    }
+
     private void runPlayersStartMethod() {
+        List<Thread> threads = new ArrayList<>();
         for (ClientManager clientManager : this.clientManagers) {
-            clientManager.start();
+            Thread thread = new Thread(clientManager::start);
+            threads.add(thread);
+            thread.start();
         }
         for (BotPlayer bot : this.botPlayers) {
-            bot.Play();
+            Thread thread = new Thread(bot::Play);
+            threads.add(thread);
+            thread.start();
         }
+        //play and get message from them to interrupt threads
     }
 
     private void setPlayers() {

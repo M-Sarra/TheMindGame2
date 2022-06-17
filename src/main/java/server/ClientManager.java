@@ -18,6 +18,7 @@ public class ClientManager implements Runnable {
     private final PrintWriter out;
     private final Scanner in;
     private boolean decisionTime = false;
+    private boolean usingNinjaCard;
 
     public ClientManager(Socket socket) throws IOException {
         this.socket = socket;
@@ -41,6 +42,14 @@ public class ClientManager implements Runnable {
 
     public String getAuthToken() {
         return AuthToken;
+    }
+
+    public boolean isUsingNinjaCard() {
+        return usingNinjaCard;
+    }
+
+    public void setUsingNinjaCard(boolean useNinjaCard) {
+        this.usingNinjaCard = useNinjaCard;
     }
 
     @Override
@@ -96,9 +105,7 @@ public class ClientManager implements Runnable {
     }
 
     public void start() {
-        while (true) {
 
-        }
     }
 
     private void sendMessage(String message) {

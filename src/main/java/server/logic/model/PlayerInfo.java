@@ -12,7 +12,6 @@ public class PlayerInfo extends Player {
     private String Name;
     private String Token;
     private List<Integer> hand;
-    private ClientManager clientManager;
 
     public PlayerInfo(String name, String token) {
         this.hand = new ArrayList<>();
