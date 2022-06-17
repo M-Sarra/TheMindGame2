@@ -1,5 +1,8 @@
 package server;
 
+import server.logic.GameStatus;
+import server.logic.TheMindGame;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -8,11 +11,13 @@ import java.util.List;
 
 public class Server {
     private final int port;
-    private final List<ClientManager> clientManagers;
+    private static List<ClientManager> clientManagers;
+    public static List<TheMindGame> games;
 
     public Server() {
         port = setPort();
-        this.clientManagers = new ArrayList<>();
+        clientManagers = new ArrayList<>();
+        games = new ArrayList<>();
     }
 
     public void start() {
@@ -28,6 +33,39 @@ public class Server {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    protected static synchronized void setGame(ClientManager client) {
+        TheMindGame clientGame = null;
+        boolean wantsNewGame = true;
+        for (TheMindGame game : games) {
+            if (game.getStatus() == GameStatus.NotStarted &&
+                    game.getClientManagersNumber() < game.getPlayerNumber()) {
+                if (client.decideToPLay()) {
+                    game.addClientManager(client);
+                    clientGame = game;
+                    wantsNewGame = false;
+                }
+                break;
+            }
+        }
+        if (wantsNewGame) {
+            TheMindGame newGame = new TheMindGame();
+            newGame.addClientManager(client);
+            newGame.setHost(client);
+            games.add(newGame);
+            clientGame = newGame;
+        }
+        client.getGame(clientGame);
+    }
+
+    public static boolean containsToken(String token) {
+        for (ClientManager clientManager : clientManagers) {
+            if (clientManager.getAuthToken().equals(token)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     //TODO

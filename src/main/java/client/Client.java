@@ -7,15 +7,15 @@ public class Client {
     private String host;
     private int port;
     private String name;
-    private int botNumber;
+    private int playerNumber;
     private int AuthToken;
 
     public void setName(String name) {
         this.name = name;
     }
 
-    public void setBotNumber(int botNumber) {
-        this.botNumber = botNumber;
+    public void setPlayerNumber(int playerNumber) {
+        this.playerNumber = playerNumber;
     }
 
     public void setAuthToken(int authToken) {
@@ -26,8 +26,8 @@ public class Client {
         return name;
     }
 
-    public int getBotNumber() {
-        return botNumber;
+    public int getPlayerNumber() {
+        return playerNumber;
     }
 
     public int getAuthToken() {

@@ -11,6 +11,7 @@ public class GameManager {
     private Thread messageGetter;
     private Thread messageSender;
     private String message = "";
+    private boolean isHost = true;
 
     public GameManager(Socket socket, Client client) {
         this.client = client;
@@ -20,9 +21,10 @@ public class GameManager {
 
     public void startGame() {
         introduceGame();
+        setDecisionTime();
         getNameAndBotNo();
         getAuthToken();
-        start();
+        orderToStart();
     }
 
     private void introduceGame() {
@@ -31,21 +33,60 @@ public class GameManager {
                 "It can do things for real that sometimes feel like magic.\n");
     }
 
+    private void setDecisionTime() {
+        boolean decisionTime = Boolean.parseBoolean(transmitter.getMessage());
+        if (decisionTime) {
+            consoleManager.sendMessage("There is a 'notStarted' game. Do you want to join?\n" +
+                    "type y or n");
+            String answer = consoleManager.getMessage();
+            while (true) {
+                if (answer.equals("y") || answer.equals("Y")) {
+                    transmitter.sendMessage("{'decision': true}");
+                    isHost = false;
+                    break;
+                } else if (answer.equals("n") || answer.equals("N")) {
+                    transmitter.sendMessage("{'decision': false}");
+                    break;
+                }
+                else {
+                    consoleManager.sendMessage("Invalid input!");
+                }
+            }
+        }
+    }
+
     private void getNameAndBotNo() {
         //send message duo to a better way
         consoleManager.sendMessage("Enter your name:");
         client.setName(consoleManager.getMessage());
-        transmitter.sendMessage("Name: " + client.getName());
-        consoleManager.sendMessage("Enter the number of bots:");
-        client.setBotNumber(Integer.parseInt(consoleManager.getMessage()));
-        transmitter.sendMessage("botNumber: " + client.getBotNumber());
+        transmitter.sendMessage(client.getName());
+        if (isHost) {
+            consoleManager.sendMessage("Enter the number of players:");
+            client.setPlayerNumber(Integer.parseInt(consoleManager.getMessage()));
+            transmitter.sendMessage(String.valueOf(client.getPlayerNumber()));
+        }
     }
 
-    //TODO
     private void getAuthToken() {
         //check if message contains auth token
-        client.setAuthToken(Integer.parseInt(transmitter.getMessage().split(" ")[1]));
-        consoleManager.sendMessage("AuthToken: " + client.getAuthToken());
+        String message = transmitter.getMessage();
+        try {
+            client.setAuthToken(Integer.parseInt(message));
+            consoleManager.sendMessage("AuthToken: " + client.getAuthToken());
+        } catch (NumberFormatException ignored) {}
+    }
+
+    private void orderToStart() {
+        if (isHost) {
+            consoleManager.sendMessage("Type 'start' to start the game.");
+            String message = consoleManager.getMessage();
+            if (message.equals("start")) {
+                transmitter.sendMessage("start");
+                start();
+            } else {
+                orderToStart();
+            }
+        }
     }
 
     private void start() {
