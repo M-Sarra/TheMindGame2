@@ -104,6 +104,10 @@ public class ClientManager implements Runnable {
         }
     }
 
+    public void decideToUseNinja(boolean haveCard) {
+
+    }
+
     public void start() {
 
     }

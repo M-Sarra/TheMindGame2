@@ -272,12 +272,38 @@ public class TheMindGame implements Runnable {
 
     private boolean useNinjaCard() {
         if (ninjaCards == 0) return false;
+        List<Thread> threads = new ArrayList<>();
+        if (this.usedCards.size() > 1) {
+            int i = 0;
+            for (ClientManager clientManager : this.clientManagers) {
+                for (PlayerInfo player : this.players) {
+                    if (player.getToken().equals(clientManager.getAuthToken())) {
+                        Thread thread;
+                        if (player.getHand().size() > 0) {
+                            i++;
+                            thread = new Thread(() -> clientManager.decideToUseNinja(true));
+                        }
+                        else {
+                            thread = new Thread(() -> clientManager.decideToUseNinja(false));
+                        }
+                        threads.add(thread);
+                        thread.start();
+                        break;
+                    }
+                }
+            }
+            if (i == 0) return false;
+        }
+        else return false;
         final boolean[] useNinjaCard1 = new boolean[1];
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
                 boolean useNinjaCard = true;
+                for (Thread thread : threads) {
+                    thread.interrupt();
+                }
                 for (ClientManager clientManager : clientManagers) {
                     if (!clientManager.isUsingNinjaCard())  {
                         useNinjaCard = false;
