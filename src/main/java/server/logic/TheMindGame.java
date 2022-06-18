@@ -21,6 +21,7 @@ public class TheMindGame {
 
     public TheMindGame(String name,GameController controller)
     {
+        //برای تست کردن نوشتیم.
         this.Name = name;
         this.controller = controller;
         this.heartCards = 0;
