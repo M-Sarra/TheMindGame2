@@ -91,6 +91,16 @@ public class GameManager {
 
     private void start() {
         do {
+            message = transmitter.getMessage();
+            if (message.equals("true")) {
+                consoleManager.sendMessage("Do you want to use ninja card? type 'y' or 'n'.");
+                message = consoleManager.getMessage();
+                if (message.equals("y") || message.equals("Y")) {
+                    transmitter.sendMessage("true");
+                }
+                else transmitter.sendMessage("false");
+            }
+
             messageGetter = new Thread(() -> {
                 message = transmitter.getMessage();
                 messageSender.interrupt();
@@ -98,6 +108,7 @@ public class GameManager {
 
                 consoleManager.sendMessage(message);
             });
+
             messageSender = new Thread(() -> {
                 message = consoleManager.getMessage();
                 //message could be invalid yet
@@ -106,6 +117,7 @@ public class GameManager {
                     transmitter.sendMessage(message);
                 }
             });
+
             messageGetter.start();
             messageSender.start();
 

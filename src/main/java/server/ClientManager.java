@@ -54,7 +54,26 @@ public class ClientManager implements Runnable {
 
     @Override
     public void run() {
+        Server.setGame(this);
+        getNameAndBotNo();
         sendMessage(AuthToken);
+        getStartOrder();
+    }
+
+    private void getNameAndBotNo() {
+        if (!decisionTime) {
+            sendMessage("false");
+        }
+        name = in.nextLine();
+        if (isHost) {
+            playerNumber = Integer.parseInt(in.nextLine());
+            for (TheMindGame game : Server.games) {
+                if (game.getHost().getAuthToken().equals(this.AuthToken)) {
+                    game.setPlayerNumber(this.playerNumber);
+                    break;
+                }
+            }
+        }
     }
 
     protected boolean decideToPLay() {
@@ -68,6 +87,21 @@ public class ClientManager implements Runnable {
 
     protected void getGame(TheMindGame game) {
         this.game = game;
+    }
+
+    //TODO
+    private void getStartOrder() {
+        if (isHost) {
+            String message = in.nextLine();
+            if (message.equals("start")) {
+                for (TheMindGame game : Server.games) {
+                    if (game.getHost().getAuthToken().equals(this.AuthToken)) {
+                        new Thread(game).start();
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     public void start() {
