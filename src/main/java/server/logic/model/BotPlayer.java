@@ -12,20 +12,18 @@ import java.util.TimerTask;
 public class BotPlayer extends Player {
     private final String name;
     private String token;
-    private final TheMindGame game;
+    private TheMindGame game;
     private Timer timer;
     private List<Integer> hand;
     private LocalDateTime time;
     private final int DelayForeachCard = 500;
     private final int InitialDelay = 5000;
 
-    public BotPlayer(String name, TheMindGame game) {
+    public BotPlayer(String name) {
         //name is not required
         this.time = LocalDateTime.now();
         this.name = name;
-        this.game = game;
         this.hand = new ArrayList<>();
-        this.token = game.Join(name,this);
         this.timer = new Timer();
         this.timer.schedule(new TimerTask() {
             @Override
@@ -33,6 +31,11 @@ public class BotPlayer extends Player {
                 Play();
             }
         },0,100);
+    }
+
+    public void Join1(TheMindGame game)
+    {
+        this.game = game;
     }
 
     public  void Play() {

@@ -6,7 +6,8 @@ public class Example {
         t.printType(1.34d+2.54f);
         try {
             GameController controller = new GameController(new TheMindGameUI());
-            controller.StartGame();
+            controller.CreateNewGame("Default",5);
+            controller.StartGame(null,"Default");
             while (controller.IsOpen()) {
                 Thread.sleep(50);
             }

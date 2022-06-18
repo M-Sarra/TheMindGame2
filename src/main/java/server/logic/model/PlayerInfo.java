@@ -11,7 +11,7 @@ public class PlayerInfo {
 
     public String Token;
     public List<Integer> hand;
-    private Player player;
+    public Player player;
     public PlayerInfo(String name, String token,Player player) {
         this.hand = new ArrayList<>();
         this.Name = name;

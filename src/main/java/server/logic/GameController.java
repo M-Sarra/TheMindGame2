@@ -3,41 +3,118 @@ package server.logic;
 import server.logic.model.BotPlayer;
 import server.logic.model.GameObserver;
 import server.logic.model.Player;
+import server.logic.model.PlayerInfo;
 // A Java program for a Serverside
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
 public class GameController extends GameObserver {
-    private TheMindGame game;
+    private List<TheMindGame> games;
     private TheMindGameUI ui;
-    private  List<Player> players;
+    private  List<PlayerInfo> players;
+    private SecureRandom random;
 
     public GameController(TheMindGameUI ui)
     {
         this.ui = ui;
-        this.players = new ArrayList<Player>();
-        this.game = new TheMindGame();
-        //Todo: اضافه شدن بات ها در جای مناسبتری قرار گیرد
-        this.game.AddObserver(this);
-        AddBot("Sara");
-        AddBot("Fateme");
-        AddBot("Abc");
+        this.random = new SecureRandom();// SecureRandom.getInstanceStrong();
+        this.players = new ArrayList<PlayerInfo>();
+        this.games = new ArrayList<>();
     }
 
-    private void AddBot(String name) {
-        BotPlayer bot = new BotPlayer(name, game);
-        this.players.add(bot);
+    private String GetUnusedToken() {
+        PlayerInfo player;
+        String token;
+        do {
+            token= String.valueOf(this.random.nextLong());
+            player = GetPlayerByToken(token);
+        }while (player != null);
+        return token;
     }
+
+    public PlayerInfo GetPlayerByToken(String token) {
+        for (PlayerInfo player: this.players) {
+            if(player.Token.equals(token))
+                return player;
+        }
+        return null;
+    }
+
+
+    public boolean CreateNewGame(String name, int botCount) {
+        TheMindGame game = GetGameByName(name);
+        if (game != null) return false;
+        game = new TheMindGame(name,this);
+        this.games.add(game);
+        game.AddObserver(this);
+        for (int i = 0; i < botCount;i++) {
+            AddBot("Bot"+i,game);
+            //AddBot("Fateme");
+            //AddBot("Abc");
+        }
+        return true;
+    }
+
+    private TheMindGame GetGameByName(String name) {
+        for (TheMindGame game : this.games)
+            if(game.Name.equals(name))
+                return game;
+        return null;
+    }
+
+    public  List<String> GetGames()
+    {
+        List<String> gameNames = new ArrayList<>();
+        for (TheMindGame game:this.games) {
+            gameNames.add(game.Name);
+        }
+        return gameNames;
+    }
+
+    private void AddBot(String name,TheMindGame game) {
+        BotPlayer bot = new BotPlayer(name);
+        Join(name,bot,game);
+        bot.Join1(game);
+    }
+
+    public String Join(String name, Player observer,TheMindGame game)
+    {
+        GameStatus status = game.getStatus();
+        if(status != GameStatus.NotStarted)
+            return "Invalid connecting time";
+        PlayerInfo player = GetPlayerByName(name);
+        if(player != null)
+            return "duplicative name";
+        String token = GetUnusedToken();
+        player = new PlayerInfo(name,token,observer);
+        this.players.add(player);
+        game.AddPlayer(player);
+        return token;
+    }
+
+
+    private PlayerInfo GetPlayerByName(String name) {
+        for (PlayerInfo player: this.players) {
+            if(player.Name.equals(name))
+                return player;
+        }
+        return null;
+    }
+
 
     private void Log(String message) {
         this.ui.DispayEvent( "["+ LocalDateTime.now().format(DateTimeFormatter.ISO_TIME)+"] "+message);
     }
 
     //Todo: سارا
-    public void StartGame() {
-        this.game.Start();
+    public void StartGame(String token,  String gameName) {
+        TheMindGame game = this.GetGameByName(gameName);
+        if(game == null)
+            return;
+        game.Start();
     }
 
     @Override
@@ -55,9 +132,14 @@ public class GameController extends GameObserver {
         this.Log("Heart missed.");
     }
 
-    public  boolean IsOpen()
-    {
-        GameStatus status =  this.game.getStatus();
-        return (status != GameStatus.GameOver);
+    public  boolean IsOpen() {
+        for (TheMindGame game : this.games) {
+
+
+            GameStatus status = game.getStatus();
+            if (status != GameStatus.GameOver)
+                return true;
+        }
+        return false;
     }
 }

@@ -8,68 +8,34 @@ import java.security.*;
 import java.util.*;
 
 public class TheMindGame {
+    public String Name;
+    private GameController controller;
     private GameStatus status;
     private int level;
-    private SecureRandom random;
     private List<PlayerInfo> players;
     private List<GameObserver> observers;
     private List<Integer> usedCards;
     private  int heartCards;
     private Integer lastPlayedCard;
+    private SecureRandom random;
 
-    public TheMindGame()
+    public TheMindGame(String name,GameController controller)
     {
+        this.Name = name;
+        this.controller = controller;
         this.heartCards = 0;
         this.level = 0;
+        this.random = new SecureRandom();
         this.status = GameStatus.NotStarted;
         this.usedCards = new ArrayList<>();
-        this.random = new SecureRandom();// SecureRandom.getInstanceStrong();
         this.players = new ArrayList<>();
         this.observers = new ArrayList<>();
     }
 
-    public String Join(String name, Player observer)
-    {
-        if(this.status != GameStatus.NotStarted)
-            return "Invalid connecting time";
-        PlayerInfo player = GetPlayerByName(name);
-        if(player != null)
-            return "duplicative name";
-        String token = GetUnusedToken();
-        player = new PlayerInfo(name,token,observer);
-        this.players.add(player);
-        this.observers.add(observer);
-        return token;
-    }
 
     public  void  AddObserver(GameObserver observer)
     {
         this.observers.add(observer);
-    }
-
-    private String GetUnusedToken() {
-        PlayerInfo player;
-        String token;
-        do {
-            token= String.valueOf(this.random.nextLong());
-            player = GetPlayerByToken(token);
-        }while (player != null);
-        return token;
-    }
-
-    private PlayerInfo GetPlayerByName(String name) {
-        for (PlayerInfo player: this.players) {
-            if(player.Name.equals(name))
-                return player;
-        }
-        return null;
-    }
-    private PlayerInfo GetPlayerByToken(String token) {
-        for (PlayerInfo player: this.players) {
-            if(player.Token.equals(token))
-                return player;
-        }
-        return null;
     }
 
     public String Start()
@@ -161,10 +127,16 @@ public class TheMindGame {
         inform.start();
     }
 
+    public void AddPlayer(PlayerInfo player) {
+        this.players.add(player);
+        this.observers.add(player.player);
+    }
+
+
     public String Play(String token, Integer card) {
         if(this.status !=  GameStatus.LevelStarted)
             return "Invalid action";
-        PlayerInfo player = this.GetPlayerByToken(token);
+        PlayerInfo player = this.controller.GetPlayerByToken(token);
         if(player == null)
             return "Invalid player";
         if(!player.hand.contains(card))
