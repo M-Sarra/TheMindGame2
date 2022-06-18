@@ -1,4 +1,4 @@
-package server.logic;
+package server.logic.model;
 
 import server.logic.GameStatus;
 import server.logic.TheMindGame;

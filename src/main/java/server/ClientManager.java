@@ -54,7 +54,26 @@ public class ClientManager implements Runnable {
 
     @Override
     public void run() {
+        Server.setGame(this);
+        getNameAndBotNo();
         sendMessage(AuthToken);
+        getStartOrder();
+    }
+
+    private void getNameAndBotNo() {
+        if (!decisionTime) {
+            sendMessage("false");
+        }
+        name = in.nextLine();
+        if (isHost) {
+            playerNumber = Integer.parseInt(in.nextLine());
+            for (TheMindGame game : Server.games) {
+                if (game.getHost().getAuthToken().equals(this.AuthToken)) {
+                    game.setPlayerNumber(this.playerNumber);
+                    break;
+                }
+            }
+        }
     }
 
     protected boolean decideToPLay() {
@@ -70,8 +89,50 @@ public class ClientManager implements Runnable {
         this.game = game;
     }
 
-    public void start() {
+    //TODO
+    private void getStartOrder() {
+        if (isHost) {
+            String message = in.nextLine();
+            if (message.equals("start")) {
+                for (TheMindGame game : Server.games) {
+                    if (game.getHost().getAuthToken().equals(this.AuthToken)) {
+                        new Thread(game).start();
+                        break;
+                    }
+                }
+            }
+        }
+    }
 
+    public void decideToUseNinja(boolean haveCard) {
+        if (!haveCard) {
+            sendMessage("false");
+            setUsingNinjaCard(false);
+        }
+        else {
+            sendMessage("true");
+            try {
+                boolean useNinja = Boolean.parseBoolean(in.nextLine());
+                setUsingNinjaCard(useNinja);
+            } catch (Exception e) {
+                setUsingNinjaCard(false);
+            }
+        }
+    }
+
+    //TODO
+    public void start() {
+        String message = "";
+        try {
+            message = in.nextLine();
+            int cardNumber = Integer.parseInt(message);
+            //check if cardNumber is valid
+            this.game.Play(this.AuthToken, cardNumber);
+        } catch (Exception ignored) {}
+    }
+
+    public void sendGameStatus(String status) {
+        sendMessage(status);
     }
 
     private void sendMessage(String message) {
