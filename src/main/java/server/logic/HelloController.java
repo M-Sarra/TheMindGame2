@@ -112,7 +112,7 @@ public class HelloController extends  GameObserver {
     }
     @FXML
     protected void onStartGame() {
-        this.game.Start();
+        this.game.start();
     }
 
     @Override

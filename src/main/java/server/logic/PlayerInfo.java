@@ -3,6 +3,7 @@ package server.logic;
 import javafx.beans.Observable;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class PlayerInfo {
@@ -24,4 +25,15 @@ public class PlayerInfo {
         this.observer.GiveCard(cardNumber);
     }
 
+    public String getName() {
+        return this.Name;
+    }
+
+    public List<Integer> getHand() {
+        return this.hand;
+    }
+
+    public String getToken() {
+        return this.Token;
+    }
 }

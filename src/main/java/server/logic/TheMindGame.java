@@ -1,8 +1,6 @@
 package server.logic;
 
 import server.ClientManager;
-import server.logic.model.BotPlayer;
-import server.logic.model.PlayerInfo;
 
 import java.security.SecureRandom;
 import java.util.*;
@@ -79,12 +77,12 @@ public class TheMindGame implements Runnable {
         this.heartCards++;
     }
 
-    public void join(String name, String token) {
+    public void join(String name, String token,GameObserver observer) {
         if(this.status != GameStatus.NotStarted) return;
         PlayerInfo player = GetPlayerByName(name);
         if(player != null) return;
         //String token = GetUnusedToken();
-        player = new PlayerInfo(name, token);
+        player = new PlayerInfo(name, token,observer);
         this.players.add(player);
         //this.observers.add(observer);
     }
@@ -109,7 +107,7 @@ public class TheMindGame implements Runnable {
 
     private PlayerInfo GetPlayerByName(String name) {
         for (PlayerInfo player: this.players) {
-            if(player.getName().equals(name))
+            if(player.Name.equals(name))
                 return player;
         }
         return null;
@@ -117,7 +115,7 @@ public class TheMindGame implements Runnable {
 
     private PlayerInfo GetPlayerByToken(String token) {
         for (PlayerInfo player: this.players) {
-            if (player.getToken().equals(token))
+            if (player.Token.equals(token))
                 return player;
         }
         return null;
@@ -327,7 +325,8 @@ public class TheMindGame implements Runnable {
 
     private void setPlayers() {
         for (ClientManager clientManager : this.clientManagers) {
-            join(clientManager.getName(), clientManager.getAuthToken());
+            //Todo: سارا صحبت کنیم.
+            join(clientManager.getName(), clientManager.getAuthToken(),null);//clientManager);
         }
         for (int i = clientManagers.size(); i < playerNumber; i++) {
             String name = "bot" + (i - clientManagers.size());
