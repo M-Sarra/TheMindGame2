@@ -4,6 +4,8 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import server.logic.model.BotPlayer;
+import server.logic.model.Player;
 // A Java program for a Serverside
 import java.net.*;
 import java.io.*;
@@ -11,7 +13,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 public class HelloController extends  GameObserver {
     @FXML
