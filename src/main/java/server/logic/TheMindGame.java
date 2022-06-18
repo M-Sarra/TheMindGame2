@@ -234,7 +234,7 @@ public class TheMindGame implements Runnable {
         NotifyPlayingCard(player.getName(),card);
         this.usedCards.remove(card);
         if (card < this.lastPlayedCard)
-            this.MissHeart();
+            this.missHeart();
         this.lastPlayedCard = card;
         if (this.status == GameStatus.GameOver)
             return "Game Over";
@@ -243,7 +243,7 @@ public class TheMindGame implements Runnable {
         return "Success";
     }
 
-    private void MissHeart() {
+    private void missHeart() {
         this.heartCards --;
         this.NotifyHeartMissed();
         if (this.heartCards == 0) this.ChangeStatus(GameStatus.GameOver);
@@ -262,12 +262,21 @@ public class TheMindGame implements Runnable {
             if (this.heartCards == 0) return;
             ChangeLevel();
             for (int j = 1; j < playerNumber * i; j++) {
+
                 if (!useNinjaCard()) {
                     runPlayersStartMethod();
+                    checkPlayedCard();
                 }
                 sendGameStatus();
+                if (this.status == GameStatus.GameOver) {
+                    //game finished
+                    //send message : Game finished
+                    return;
+                }
             }
         }
+        this.status = GameStatus.win;
+        //send message : you win the game
     }
 
     private boolean useNinjaCard() {
@@ -337,6 +346,7 @@ public class TheMindGame implements Runnable {
     }
 
     private void runPlayersStartMethod() {
+        int previousCard = this.lastPlayedCard;
         List<Thread> threads = new ArrayList<>();
         for (ClientManager clientManager : this.clientManagers) {
             Thread thread = new Thread(clientManager::start);
@@ -348,8 +358,31 @@ public class TheMindGame implements Runnable {
             threads.add(thread);
             thread.start();
         }
-
+        while (previousCard == this.lastPlayedCard) {
+            try {
+                Thread.currentThread().wait();
+            } catch (InterruptedException ignored) {}
+        }
+        for (Thread thread : threads) {
+            try {
+                thread.interrupt();
+            } catch (Exception ignored) {}
+        }
         //play and get message from them to interrupt threads
+    }
+
+    private void checkPlayedCard() {
+        if (!Collections.min(this.usedCards).equals(this.lastPlayedCard)) {
+            List<Integer> cards = new ArrayList<>();
+            for (int card : usedCards) {
+                if (card <= lastPlayedCard) {
+                    cards.add(card);
+                }
+            }
+            usedCards.removeAll(cards);
+            missHeart();
+            //send message to clients : miss heart because of wrong card + send "cards" list
+        }
     }
 
     private void setPlayers() {
