@@ -11,17 +11,17 @@ public class PlayerInfo {
 
     public String Token;
     public List<Integer> hand;
-    private GameObserver observer;
-    public PlayerInfo(String name, String token,GameObserver observer) {
+    private Player player;
+    public PlayerInfo(String name, String token,Player player) {
         this.hand = new ArrayList<>();
         this.Name = name;
         this.Token = token;
-        this.observer = observer;
+        this.player = player;
     }
 
     public void GiveCard(int cardNumber) {
         this.hand.add(cardNumber);
-        this.observer.GiveCard(cardNumber);
+        this.player.GiveCard(cardNumber);
     }
 
 }

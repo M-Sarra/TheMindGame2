@@ -46,11 +46,6 @@ public class GameController extends GameObserver {
     }
 
     @Override
-    public void GiveCard(Integer card) {
-
-    }
-
-    @Override
     public void NotifyPlaysCard(String player, Integer card) {
         this.Log(player+ " plays "+ card + ".");
     }

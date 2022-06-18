@@ -1,6 +1,7 @@
 package server.logic;
 
 import server.logic.model.GameObserver;
+import server.logic.model.Player;
 import server.logic.model.PlayerInfo;
 
 import java.security.*;
@@ -27,7 +28,7 @@ public class TheMindGame {
         this.observers = new ArrayList<>();
     }
 
-    public String Join(String name, GameObserver observer)
+    public String Join(String name, Player observer)
     {
         if(this.status != GameStatus.NotStarted)
             return "Invalid connecting time";
