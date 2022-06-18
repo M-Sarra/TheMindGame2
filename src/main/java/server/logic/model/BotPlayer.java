@@ -1,4 +1,4 @@
-package server.logic.model;
+package server.logic;
 
 import server.logic.GameStatus;
 import server.logic.TheMindGame;
@@ -35,7 +35,7 @@ public class BotPlayer extends Player {
         },0,100);
     }
 
-    public void Play() {
+    public  void Play() {
         int count = this.hand.size();
         if (count <= 0) return ;
         Integer minCard = Integer.MAX_VALUE;
@@ -44,13 +44,12 @@ public class BotPlayer extends Player {
                 minCard = card;
         Integer lastCard = this.game.GetLastPlayedCard();
         boolean playing = false;
-        if (minCard < lastCard + 1)
+        if(minCard < lastCard + 1)
             playing = true;
         else if(this.game.GetCountOfUnplayedCards() == count)
             playing = true;
         else {
-            LocalDateTime playTime = time.plusNanos((this.InitialDelay +
-                    (long) minCard * this.DelayForeachCard) * 1000000L);
+            LocalDateTime playTime = time.plusNanos((this.InitialDelay + (long) minCard * this.DelayForeachCard) * 1000000L);
             LocalDateTime now = LocalDateTime.now();
             if (playTime.compareTo(now) < 0) {
                 playing = true;

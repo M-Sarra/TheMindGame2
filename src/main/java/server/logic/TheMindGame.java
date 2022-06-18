@@ -21,7 +21,6 @@ public class TheMindGame implements Runnable {
     private List<ClientManager> clientManagers;
     private ClientManager host;
     private int playerNumber;
-    private String missedCards = "";
 
     public TheMindGame() {
         this.heartCards = 0;
@@ -271,13 +270,14 @@ public class TheMindGame implements Runnable {
                 }
                 sendGameStatus();
                 if (this.status == GameStatus.GameOver) {
-                    gameFinished(false);
+                    //game finished
+                    //send message : Game finished
                     return;
                 }
             }
         }
         this.status = GameStatus.win;
-        gameFinished(true);
+        //send message : you win the game
     }
 
     private boolean useNinjaCard() {
@@ -350,15 +350,9 @@ public class TheMindGame implements Runnable {
         int previousCard = this.lastPlayedCard;
         List<Thread> threads = new ArrayList<>();
         for (ClientManager clientManager : this.clientManagers) {
-            for (PlayerInfo player : this.players) {
-                if (player.getToken().equals(clientManager.getAuthToken())) {
-                    clientManager.setHand(player.getHand());
-                    Thread thread = new Thread(clientManager::start);
-                    threads.add(thread);
-                    thread.start();
-                    break;
-                }
-            }
+            Thread thread = new Thread(clientManager::start);
+            threads.add(thread);
+            thread.start();
         }
         for (BotPlayer bot : this.botPlayers) {
             Thread thread = new Thread(bot::Play);
@@ -380,25 +374,17 @@ public class TheMindGame implements Runnable {
 
     //TODO
     private void checkPlayedCard() {
-        List<Integer> cards = new ArrayList<>();
-        cards.add(lastPlayedCard);
         if (!Collections.min(this.usedCards).equals(this.lastPlayedCard)) {
+            List<Integer> cards = new ArrayList<>();
             for (int card : usedCards) {
-                if (card < lastPlayedCard) {
+                if (card <= lastPlayedCard) {
                     cards.add(card);
                 }
             }
+            usedCards.removeAll(cards);
             missHeart();
-            this.missedCards = "Wrong card played. Missed cards:" + cards.toString();
             //send message to clients : miss heart because of wrong card + send "cards" list
         }
-        for (PlayerInfo player : this.players) {
-            player.getHand().removeAll(cards); //is correct??
-        }
-        for (BotPlayer bot : this.botPlayers) {
-            bot.getHand().removeAll(cards); // is correct??
-        }
-        usedCards.removeAll(cards);
     }
 
     private void setPlayers() {
@@ -420,21 +406,11 @@ public class TheMindGame implements Runnable {
                     break;
                 }
             }
-            String status = "";
-            if (!this.missedCards.equals("")) {
-                status = this.missedCards + "\n";
-            }
-            status += "heart card number: " + this.heartCards + "\n" +
+            String status = "heart card number: " + this.heartCards + "\n" +
                     "ninja card number: " + this.ninjaCards + "\n" +
                     "last played card: " + this.lastPlayedCard + "\n" +
                     "your hand: " + hand.toString();
             clientManager.sendGameStatus(status);
-        }
-    }
-
-    private void gameFinished(boolean result) {
-        for (ClientManager clientManager : this.clientManagers) {
-            clientManager.gameFinished(result);
         }
     }
 

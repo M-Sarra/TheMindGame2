@@ -1,6 +1,4 @@
-package server.logic.model;
-
-import server.logic.GameObserver;
+package server.logic;
 
 public abstract class Player extends GameObserver {
 }

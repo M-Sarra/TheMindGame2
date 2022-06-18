@@ -1,54 +1,39 @@
-package server.logic.model;
+package server.logic;
 
-import server.ClientManager;
-import server.logic.GameObserver;
-import server.logic.GameStatus;
+import javafx.beans.Observable;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
-public class PlayerInfo extends Player {
+public class PlayerInfo {
 
-    private String Name;
-    private String Token;
-    private List<Integer> hand;
+    public String Name;
 
-    public PlayerInfo(String name, String token) {
+    public String Token;
+    public List<Integer> hand;
+    private GameObserver observer;
+    public PlayerInfo(String name, String token,GameObserver observer) {
         this.hand = new ArrayList<>();
         this.Name = name;
         this.Token = token;
+        this.observer = observer;
+    }
+
+    public void GiveCard(int cardNumber) {
+        this.hand.add(cardNumber);
+        this.observer.GiveCard(cardNumber);
     }
 
     public String getName() {
-        return Name;
-    }
-
-    public String getToken() {
-        return Token;
+        return this.Name;
     }
 
     public List<Integer> getHand() {
-        return hand;
+        return this.hand;
     }
 
-    @Override
-    public void StatusChanged(GameStatus status) {
-
-    }
-
-    @Override
-    public void GiveCard(Integer card) {
-        this.hand.add(card);
-        this.hand.sort(Integer::compareTo);
-    }
-
-    @Override
-    public void NotifyPlaysCard(String player, Integer card) {
-
-    }
-
-    @Override
-    public void NotifyHeartMissed() {
-
+    public String getToken() {
+        return this.Token;
     }
 }

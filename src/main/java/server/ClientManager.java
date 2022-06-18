@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.security.SecureRandom;
-import java.util.List;
 import java.util.Scanner;
 
 public class ClientManager implements Runnable {
@@ -20,7 +19,6 @@ public class ClientManager implements Runnable {
     private final Scanner in;
     private boolean decisionTime = false;
     private boolean usingNinjaCard;
-    private List<Integer> hand;
 
     public ClientManager(Socket socket) throws IOException {
         this.socket = socket;
@@ -52,10 +50,6 @@ public class ClientManager implements Runnable {
 
     public void setUsingNinjaCard(boolean useNinjaCard) {
         this.usingNinjaCard = useNinjaCard;
-    }
-
-    public void setHand(List<Integer> hand) {
-        this.hand = hand;
     }
 
     @Override
@@ -133,18 +127,8 @@ public class ClientManager implements Runnable {
             message = in.nextLine();
             int cardNumber = Integer.parseInt(message);
             //check if cardNumber is valid
-            if (!this.hand.contains(cardNumber)) return;
             this.game.Play(this.AuthToken, cardNumber);
         } catch (Exception ignored) {}
-    }
-
-    public void gameFinished(boolean result) {
-        if (result) {
-            sendMessage("Game finished. you won the game.");
-        }
-        else {
-            sendMessage("Game finished. you lost the game.");
-        }
     }
 
     public void sendGameStatus(String status) {
