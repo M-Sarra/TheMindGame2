@@ -121,7 +121,7 @@ public class GameManager {
             messageGetter.start();
             messageSender.start();
 
-        } while (message.equals("Game finished"));
+        } while (message.contains("Game finished"));
     }
 
     private boolean isValidNumber(String message) {
