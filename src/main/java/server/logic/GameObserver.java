@@ -8,4 +8,5 @@ public abstract class GameObserver {
     public abstract void NotifyPlaysCard(String player, Integer card) ;
 
     public abstract void NotifyHeartMissed();
+
 }

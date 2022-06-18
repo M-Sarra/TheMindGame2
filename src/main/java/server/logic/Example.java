@@ -4,6 +4,16 @@ public class Example {
         TypeTesterr t = new TypeTesterr();
         t.printType(1.34f+2.54d);
         t.printType(1.34d+2.54f);
+        try {
+            GameController controller = new GameController(new TheMindGameUI());
+            controller.StartGame();
+            while (controller.IsOpen()) {
+                Thread.sleep(50);
+            }
+        }catch (Exception ex)
+        {
+            System.out.println(ex.getMessage());
+        }
     }
 
 }

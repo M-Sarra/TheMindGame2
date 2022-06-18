@@ -25,7 +25,7 @@ public class BotPlayer extends Player {
         this.name = name;
         this.game = game;
         this.hand = new ArrayList<>();
-        //this.token = game.Join(name,this);
+        this.token = game.Join(name,this);
         this.timer = new Timer();
         this.timer.schedule(new TimerTask() {
             @Override
