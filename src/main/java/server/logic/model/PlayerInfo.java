@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PlayerInfo {
-
+//نسخه جدید ساعت 10:20
     public String Name;
 
     public String Token;
