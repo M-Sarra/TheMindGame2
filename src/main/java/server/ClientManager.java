@@ -66,13 +66,14 @@ public class ClientManager implements Runnable {
         }
         name = in.nextLine();
         if (isHost) {
-            playerNumber = Integer.parseInt(in.nextLine());
+            //Todo: مذاکره
+          /*  playerNumber = Integer.parseInt(in.nextLine());
             for (TheMindGame game : Server.games) {
                 if (game.getHost().getAuthToken().equals(this.AuthToken)) {
                     game.setPlayerNumber(this.playerNumber);
                     break;
                 }
-            }
+            }*/
         }
     }
 
@@ -95,10 +96,11 @@ public class ClientManager implements Runnable {
             String message = in.nextLine();
             if (message.equals("start")) {
                 for (TheMindGame game : Server.games) {
-                    if (game.getHost().getAuthToken().equals(this.AuthToken)) {
+                    //Todo: مذاکره
+                    /*if (game.getHost().getAuthToken().equals(this.AuthToken)) {
                         new Thread(game).start();
                         break;
-                    }
+                    }*/
                 }
             }
         }

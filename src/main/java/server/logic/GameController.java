@@ -1,19 +1,15 @@
 package server.logic;
 
-import javafx.application.Platform;
-import javafx.fxml.FXML;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
+import server.logic.model.BotPlayer;
+import server.logic.model.GameObserver;
+import server.logic.model.Player;
 // A Java program for a Serverside
-import java.net.*;
-import java.io.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
-public class GameController extends  GameObserver {
+public class GameController extends GameObserver {
     private TheMindGame game;
     private TheMindGameUI ui;
     private  List<Player> players;
@@ -21,7 +17,7 @@ public class GameController extends  GameObserver {
     public GameController(TheMindGameUI ui)
     {
         this.ui = ui;
-        this.players = new ArrayList<>();
+        this.players = new ArrayList<Player>();
         this.game = new TheMindGame();
         //Todo: اضافه شدن بات ها در جای مناسبتری قرار گیرد
         this.game.AddObserver(this);

@@ -1,6 +1,6 @@
 package server.logic.model;
 
-import server.logic.GameObserver;
+import javafx.beans.Observable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,11 +12,11 @@ public class PlayerInfo {
     public String Token;
     public List<Integer> hand;
     private GameObserver observer;
-    public PlayerInfo(String name, String token) {
+    public PlayerInfo(String name, String token,GameObserver observer) {
         this.hand = new ArrayList<>();
         this.Name = name;
         this.Token = token;
-        //this.observer = observer;
+        this.observer = observer;
     }
 
     public void GiveCard(int cardNumber) {
@@ -24,15 +24,4 @@ public class PlayerInfo {
         this.observer.GiveCard(cardNumber);
     }
 
-    public String getName() {
-        return this.Name;
-    }
-
-    public List<Integer> getHand() {
-        return this.hand;
-    }
-
-    public String getToken() {
-        return this.Token;
-    }
 }

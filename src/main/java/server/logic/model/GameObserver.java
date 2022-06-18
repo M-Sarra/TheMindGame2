@@ -1,4 +1,6 @@
-package server.logic;
+package server.logic.model;
+
+import server.logic.GameStatus;
 
 public abstract class GameObserver {
     public abstract void StatusChanged(GameStatus status);

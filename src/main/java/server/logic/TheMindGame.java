@@ -1,5 +1,8 @@
 package server.logic;
 
+import server.logic.model.GameObserver;
+import server.logic.model.PlayerInfo;
+
 import java.security.*;
 import java.util.*;
 
@@ -32,7 +35,7 @@ public class TheMindGame {
         if(player != null)
             return "duplicative name";
         String token = GetUnusedToken();
-        player = new PlayerInfo(name, token,observer);
+        player = new PlayerInfo(name,token,observer);
         this.players.add(player);
         this.observers.add(observer);
         return token;
