@@ -105,11 +105,27 @@ public class ClientManager implements Runnable {
     }
 
     public void decideToUseNinja(boolean haveCard) {
-
+        if (!haveCard) {
+            sendMessage("false");
+            setUsingNinjaCard(false);
+        }
+        else {
+            sendMessage("true");
+            try {
+                boolean useNinja = Boolean.parseBoolean(in.nextLine());
+                setUsingNinjaCard(useNinja);
+            } catch (Exception e) {
+                setUsingNinjaCard(false);
+            }
+        }
     }
 
     public void start() {
 
+    }
+
+    public void sendGameStatus(String status) {
+        sendMessage(status);
     }
 
     private void sendMessage(String message) {

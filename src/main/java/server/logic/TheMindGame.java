@@ -264,8 +264,8 @@ public class TheMindGame implements Runnable {
             for (int j = 1; j < playerNumber * i; j++) {
                 if (!useNinjaCard()) {
                     runPlayersStartMethod();
-                    sendGameStatus();
                 }
+                sendGameStatus();
             }
         }
     }
@@ -348,6 +348,7 @@ public class TheMindGame implements Runnable {
             threads.add(thread);
             thread.start();
         }
+
         //play and get message from them to interrupt threads
     }
 
@@ -361,17 +362,21 @@ public class TheMindGame implements Runnable {
         }
     }
 
-    private String sendGameStatus() {
+    private void sendGameStatus() {
         for (ClientManager clientManager : this.clientManagers) {
             List<Integer> hand = new ArrayList<>();
             for (PlayerInfo player : this.players) {
                 if (player.getToken().equals(clientManager.getAuthToken())) {
                     hand = player.getHand();
+                    break;
                 }
             }
-            return this.heartCards + " " + this.ninjaCards + " " + this.lastPlayedCard + " " + hand.toString();
+            String status = "heart card number: " + this.heartCards + "\n" +
+                    "ninja card number: " + this.ninjaCards + "\n" +
+                    "last played card: " + this.lastPlayedCard + "\n" +
+                    "your hand: " + hand.toString();
+            clientManager.sendGameStatus(status);
         }
-        return "Could not get status!!";
     }
 
     @Override
