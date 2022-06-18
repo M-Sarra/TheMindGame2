@@ -257,6 +257,7 @@ public class TheMindGame implements Runnable {
         return this.usedCards.size();
     }
 
+    //TODO
     private void playRound() {
         for (int i = 1; i <= 12; i++) {
             if (this.heartCards == 0) return;
@@ -371,6 +372,7 @@ public class TheMindGame implements Runnable {
         //play and get message from them to interrupt threads
     }
 
+    //TODO
     private void checkPlayedCard() {
         if (!Collections.min(this.usedCards).equals(this.lastPlayedCard)) {
             List<Integer> cards = new ArrayList<>();

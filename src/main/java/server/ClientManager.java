@@ -120,8 +120,15 @@ public class ClientManager implements Runnable {
         }
     }
 
+    //TODO
     public void start() {
-
+        String message = "";
+        try {
+            message = in.nextLine();
+            int cardNumber = Integer.parseInt(message);
+            //check if cardNumber is valid
+            this.game.Play(this.AuthToken, cardNumber);
+        } catch (Exception ignored) {}
     }
 
     public void sendGameStatus(String status) {
