@@ -3,6 +3,7 @@ package server.logic.model;
 import server.logic.GameStatus;
 import server.logic.TheMindGame;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,9 +19,13 @@ public class BotPlayer extends Player {
     private LocalDateTime time;
     private final int DelayForeachCard = 500;
     private final int InitialDelay = 5000;
+    private SecureRandom random;
+    private boolean forcePlayCard;
 
     public BotPlayer(String name) {
         //name is not required
+        this.random = new SecureRandom();
+        this.forcePlayCard = false;
         this.time = LocalDateTime.now();
         this.name = name;
         this.hand = new ArrayList<>();
@@ -39,17 +44,28 @@ public class BotPlayer extends Player {
     }
 
     public  void Play() {
+        int r = this.random.nextInt(1000);
+        if(!this.forcePlayCard && r < 1)
+            this.game.PlayNinja(this.token);
+        else {
+            PlayCard();
+        }
+    }
+
+    private void PlayCard() {
+        boolean playing = this.forcePlayCard;
+        this.forcePlayCard = false;
         int count = this.hand.size();
-        if (count <= 0) return ;
+        if (count <= 0)
+            return;
         Integer minCard = Integer.MAX_VALUE;
         for (int card : hand)
             if (card < minCard)
                 minCard = card;
         Integer lastCard = this.game.GetLastPlayedCard();
-        boolean playing = false;
-        if(minCard < lastCard + 1)
+        if (minCard < lastCard + 1)
             playing = true;
-        else if(this.game.GetCountOfUnplayedCards() == count)
+        else if (this.game.GetCountOfUnplayedCards() == count)
             playing = true;
         else {
             LocalDateTime playTime = time.plusNanos((this.InitialDelay + (long) minCard * this.DelayForeachCard) * 1000000L);
@@ -82,6 +98,11 @@ public class BotPlayer extends Player {
     @Override
     public void NotifyPlaysCard(String player, Integer card) {
 
+    }
+
+    @Override
+    public void NotifyPlaysNinjaCard(String player) {
+        this.forcePlayCard = true;
     }
 
     @Override

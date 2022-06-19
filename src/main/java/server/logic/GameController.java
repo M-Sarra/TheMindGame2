@@ -132,6 +132,11 @@ public class GameController extends GameObserver {
     }
 
     @Override
+    public void NotifyPlaysNinjaCard(String player) {
+        this.Log(player + " plays Ninja.");
+    }
+
+    @Override
     public void NotifyHeartMissed() {
         this.Log("Heart missed.");
     }
