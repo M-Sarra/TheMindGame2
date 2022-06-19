@@ -58,7 +58,7 @@ public class GameController extends GameObserver {
         return true;
     }
 
-    private TheMindGame GetGameByName(String name) {
+    public TheMindGame GetGameByName(String name) {
         for (TheMindGame game : this.games)
             if(game.Name.equals(name))
                 return game;
@@ -106,7 +106,7 @@ public class GameController extends GameObserver {
 
 
     private void Log(String message) {
-        this.ui.DispayEvent( "["+ LocalDateTime.now().format(DateTimeFormatter.ISO_TIME)+"] "+message);
+        this.ui.DisplayEvent( "["+ LocalDateTime.now().format(DateTimeFormatter.ISO_TIME)+"] "+message);
     }
 
     //Todo: سارا
@@ -141,5 +141,23 @@ public class GameController extends GameObserver {
                 return true;
         }
         return false;
+    }
+
+    //TODO : to check if there exist a 'notStarted' game
+    public boolean isOpen() {
+        for (TheMindGame game : this.games) {
+            if (game.getStatus() != GameStatus.NotStarted)
+                return true;
+        }
+        return false;
+    }
+
+    //TODO : to send to server a not started game
+    public String joinAnExistingGame() {
+        for (TheMindGame game : this.games) {
+            if (game.getStatus() != GameStatus.NotStarted)
+                return game.Name;
+        }
+        return "Game not found!";
     }
 }

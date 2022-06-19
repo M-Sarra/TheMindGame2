@@ -1,7 +1,6 @@
 package server;
 
 import server.logic.GameStatus;
-import server.logic.TheMindGame;
 import server.logic.model.Player;
 
 import java.io.IOException;
