@@ -76,12 +76,16 @@ public class GameController extends GameObserver {
 
     private void AddBot(String name,TheMindGame game) {
         BotPlayer bot = new BotPlayer(name);
-        Join(name,bot,game);
-        bot.Join1(game);
+        String token =  Join(name,bot,game.Name);
+        bot.Join(token,game);
     }
-
-    public String Join(String name, Player observer,TheMindGame game)
+    //برای اتصال به بازی باید یک Player رو به این متد بدیم
+    //وقتی که کلاینت مون همون بازیکن هست باید اینجا ClientManager رو بهش بدیم
+    public String Join(String name, Player observer,String gameName)
     {
+        TheMindGame game = this.GetGameByName(gameName);
+        if(game == null)
+            return "Invalid game";
         GameStatus status = game.getStatus();
         if(status != GameStatus.NotStarted)
             return "Invalid connecting time";
@@ -148,21 +152,24 @@ public class GameController extends GameObserver {
         return false;
     }
 
-    //TODO : to check if there exist a 'notStarted' game
+
+    //TODO : to check if there is a 'notStarted' game between games
     public boolean isOpen() {
         for (TheMindGame game : this.games) {
-            if (game.getStatus() != GameStatus.NotStarted)
+            if (game.getStatus() == GameStatus.NotStarted)
                 return true;
         }
         return false;
     }
 
-    //TODO : to send to server a not started game
+    //TODO : Return an existing game
     public String joinAnExistingGame() {
         for (TheMindGame game : this.games) {
-            if (game.getStatus() != GameStatus.NotStarted)
+            if (game.getStatus() == GameStatus.NotStarted) {
                 return game.Name;
+            }
         }
         return "Game not found!";
     }
+
 }

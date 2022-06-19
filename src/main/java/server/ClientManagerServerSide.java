@@ -106,8 +106,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
     }
 
     private void addPlayerToGame() {
-        Server.gameController.Join(this.name, this,
-                Server.gameController.GetGameByName(this.gameName));
+        Server.gameController.Join(this.name, this, this.gameName);
     }
 
     //TODO : start game
@@ -203,6 +202,11 @@ public class ClientManagerServerSide extends Player implements Runnable {
             }
             this.hand.removeAll(removedCards);
         }
+    }
+
+    @Override
+    public void NotifyPlaysNinjaCard(String player) {
+        //Todo: برای اطلاع رسانی نینجاست
     }
 
     @Override
