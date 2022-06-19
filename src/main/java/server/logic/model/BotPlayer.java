@@ -32,9 +32,9 @@ public class BotPlayer extends Player {
             }
         },0,100);
     }
-
-    public void Join1(TheMindGame game)
+    public void Join(String token, TheMindGame game)
     {
+        this.token = token;
         this.game = game;
     }
 
