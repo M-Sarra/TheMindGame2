@@ -1,7 +1,6 @@
 package server.logic;
 
 import server.logic.model.GameObserver;
-import server.logic.model.Player;
 import server.logic.model.PlayerInfo;
 
 import java.security.*;
@@ -19,9 +18,7 @@ public class TheMindGame {
     private Integer lastPlayedCard;
     private SecureRandom random;
 
-    public TheMindGame(String name,GameController controller)
-    {
-        //برای تست کردن نوشتیم.
+    public TheMindGame(String name,GameController controller) {
         this.Name = name;
         this.controller = controller;
         this.heartCards = 0;
@@ -33,24 +30,23 @@ public class TheMindGame {
         this.observers = new ArrayList<>();
     }
 
-
-    public  void  AddObserver(GameObserver observer)
+    public void AddObserver(GameObserver observer)
     {
         this.observers.add(observer);
     }
 
-    public String Start()
-    {
-        if(this.status != GameStatus.NotStarted)
-            return "Game is "+this.status;
+    public String Start() {
+        if (this.status != GameStatus.NotStarted)
+            return "Game is " + this.status;
         this.ChangeStatus(GameStatus.Starting);
         this.DealHeartCards();
         ChangeLevel(1);
         return "Success";
     }
 
+    //TODO : because of changes in doc
     private void ChangeLevel(int level) {
-        if(level > 25) {
+        if (level > 25) {
             this.ChangeStatus(GameStatus.GameOver);
             return;
         }
@@ -67,8 +63,8 @@ public class TheMindGame {
     }
 
     private void Deal() {
-        for (PlayerInfo player:this.players) {
-            for (int i = 0 ; i < this.level;i++) {
+        for (PlayerInfo player : this.players) {
+            for (int i = 0 ; i < this.level; i++) {
                 int cardNumber = this.GetUnusedRandomCard();
                 this.usedCards.add(cardNumber);
                 player.GiveCard(cardNumber);
@@ -77,11 +73,10 @@ public class TheMindGame {
     }
 
     private int GetUnusedRandomCard() {
-
         int card ;
         do {
             card = this.random.nextInt(100)+1;
-        }while (this.usedCards.contains(card));
+        } while (this.usedCards.contains(card));
         return card;
     }
 
@@ -92,8 +87,7 @@ public class TheMindGame {
 
     private void NotifyChangeStatus(GameStatus status) {
         Thread inform = new Thread(()->{
-            for (GameObserver observer:this.observers
-            ) {
+            for (GameObserver observer:this.observers) {
                 /*Runnable runnable = new Runnable() {
                     @Override
                     public void run() {
@@ -101,26 +95,26 @@ public class TheMindGame {
                     }
                 };*/
 
-                Thread observerInform = new Thread(()->          observer.StatusChanged(status));
+                Thread observerInform = new Thread(()-> observer.StatusChanged(status));
                 observerInform.start();;
             }
         });
         inform.start();
     }
+
     private void NotifyPlayingCard(String player,int card) {
         Thread inform = new Thread(()->{
-            for (GameObserver observer:this.observers
-            ) {
-                Thread observerInform = new Thread(()-> observer.NotifyPlaysCard(player,card));
+            for (GameObserver observer:this.observers) {
+                Thread observerInform = new Thread(()-> observer.NotifyPlaysCard(player, card));
                 observerInform.start();;
             }
         });
         inform.start();
     }
+
     private void NotifyHeartMissed() {
-        Thread inform = new Thread(()->{
-            for (GameObserver observer:this.observers
-            ) {
+        Thread inform = new Thread(()-> {
+            for (GameObserver observer : this.observers) {
                 Thread observerInform = new Thread(()-> observer.NotifyHeartMissed());
                 observerInform.start();;
             }
@@ -132,7 +126,6 @@ public class TheMindGame {
         this.players.add(player);
         this.observers.add(player.player);
     }
-
 
     public String Play(String token, Integer card) {
         if(this.status !=  GameStatus.LevelStarted)
@@ -163,7 +156,6 @@ public class TheMindGame {
 
     public Integer GetLastPlayedCard() {
         return this.lastPlayedCard;
-
     }
 
     public int GetCountOfUnplayedCards() {
@@ -172,5 +164,19 @@ public class TheMindGame {
 
     public GameStatus getStatus() {
         return this.status;
+    }
+
+    //TODO : to send message to client
+    public List<String> getPlayersName() {
+        List<String> names = new ArrayList<>();
+        for (PlayerInfo player : this.players) {
+            if (!player.Name.contains("Bot")) names.add(player.Name);
+        }
+        return names;
+    }
+
+    //TODO : send heart number
+    public int getHeartNumber() {
+        return this.heartCards;
     }
 }

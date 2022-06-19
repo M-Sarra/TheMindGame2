@@ -1,7 +1,8 @@
 package server.logic;
 
 public class TheMindGameUI {
-    public void DispayEvent(String message) {
+
+    public void DisplayEvent(String message) {
         System.out.println(message);
     }
 }

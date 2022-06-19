@@ -17,11 +17,10 @@ public class GameController extends GameObserver {
     private  List<PlayerInfo> players;
     private SecureRandom random;
 
-    public GameController(TheMindGameUI ui)
-    {
+    public GameController(TheMindGameUI ui) {
         this.ui = ui;
         this.random = new SecureRandom();// SecureRandom.getInstanceStrong();
-        this.players = new ArrayList<PlayerInfo>();
+        this.players = new ArrayList<>();
         this.games = new ArrayList<>();
     }
 
@@ -31,7 +30,7 @@ public class GameController extends GameObserver {
         do {
             token= String.valueOf(this.random.nextLong());
             player = GetPlayerByToken(token);
-        }while (player != null);
+        } while (player != null);
         return token;
     }
 
@@ -43,7 +42,7 @@ public class GameController extends GameObserver {
         return null;
     }
 
-
+    //TODO : client announces the total number of player, including robots and all clients
     public boolean CreateNewGame(String name, int botCount) {
         TheMindGame game = GetGameByName(name);
         if (game != null) return false;
@@ -58,15 +57,14 @@ public class GameController extends GameObserver {
         return true;
     }
 
-    private TheMindGame GetGameByName(String name) {
+    public TheMindGame GetGameByName(String name) {
         for (TheMindGame game : this.games)
             if(game.Name.equals(name))
                 return game;
         return null;
     }
 
-    public  List<String> GetGames()
-    {
+    public List<String> GetGames() {
         List<String> gameNames = new ArrayList<>();
         for (TheMindGame game:this.games) {
             gameNames.add(game.Name);
@@ -80,21 +78,19 @@ public class GameController extends GameObserver {
         bot.Join1(game);
     }
 
-    public String Join(String name, Player observer,TheMindGame game)
-    {
+    public String Join(String name, Player observer, TheMindGame game) {
         GameStatus status = game.getStatus();
-        if(status != GameStatus.NotStarted)
+        if (status != GameStatus.NotStarted)
             return "Invalid connecting time";
         PlayerInfo player = GetPlayerByName(name);
-        if(player != null)
+        if (player != null)
             return "duplicative name";
         String token = GetUnusedToken();
-        player = new PlayerInfo(name,token,observer);
+        player = new PlayerInfo(name, token, observer);
         this.players.add(player);
         game.AddPlayer(player);
         return token;
     }
-
 
     private PlayerInfo GetPlayerByName(String name) {
         for (PlayerInfo player: this.players) {
@@ -104,22 +100,21 @@ public class GameController extends GameObserver {
         return null;
     }
 
-
     private void Log(String message) {
-        this.ui.DispayEvent( "["+ LocalDateTime.now().format(DateTimeFormatter.ISO_TIME)+"] "+message);
+        this.ui.DisplayEvent( "["+ LocalDateTime.now().format(DateTimeFormatter.ISO_TIME)+"] "+message);
     }
 
     //Todo: سارا
-    public void StartGame(String token,  String gameName) {
+    public void StartGame(String token, String gameName) {
         TheMindGame game = this.GetGameByName(gameName);
-        if(game == null)
+        if( game == null)
             return;
         game.Start();
     }
 
     @Override
     public void StatusChanged(GameStatus status) {
-        this.Log("Status changed to "+status);
+        this.Log("Status changed to " + status);
     }
 
     @Override
@@ -132,14 +127,31 @@ public class GameController extends GameObserver {
         this.Log("Heart missed.");
     }
 
-    public  boolean IsOpen() {
+    public boolean IsOpen() {
         for (TheMindGame game : this.games) {
-
-
             GameStatus status = game.getStatus();
             if (status != GameStatus.GameOver)
                 return true;
         }
         return false;
+    }
+
+    //TODO : to check if there is a 'notStarted' game between games
+    public boolean isOpen() {
+        for (TheMindGame game : this.games) {
+            if (game.getStatus() == GameStatus.NotStarted)
+                return true;
+        }
+        return false;
+    }
+
+    //TODO : Return an existing game
+    public String joinAnExistingGame() {
+        for (TheMindGame game : this.games) {
+            if (game.getStatus() == GameStatus.NotStarted) {
+                return game.Name;
+            }
+        }
+        return "Game not found!";
     }
 }

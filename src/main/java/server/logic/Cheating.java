@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Scanner;
 
 public class Cheating {
+
     public  static void main(String[] args){
         Scanner sc = new Scanner(System.in);
         int t = sc.nextInt();
@@ -26,6 +27,7 @@ public class Cheating {
         }
 
     }
+
     public static int FindSum(List<Integer> a,List<Integer> b,int start){
         int output=a.get(start);
         int count =(int)a.stream().count();
@@ -38,6 +40,7 @@ public class Cheating {
         }}
         return output;
     }
+
     public static int Moghayese(int a,int b){
         if(a>=b){
             return a-b;

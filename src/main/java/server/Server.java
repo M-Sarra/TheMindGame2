@@ -1,7 +1,8 @@
 package server;
 
-import server.logic.GameStatus;
-import server.logic.TheMindGame;
+
+import server.logic.GameController;
+import server.logic.TheMindGameUI;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -11,13 +12,13 @@ import java.util.List;
 
 public class Server {
     private final int port;
-    private static List<ClientManager> clientManagers;
-    public static List<TheMindGame> games;
+    protected static List<ClientManagerServerSide> clientManagers;
+    protected static GameController gameController;
 
     public Server() {
-        port = setPort();
+        this.port = setPort();
         clientManagers = new ArrayList<>();
-        games = new ArrayList<>();
+        gameController = new GameController(new TheMindGameUI());
     }
 
     public void start() {
@@ -25,42 +26,29 @@ public class Server {
             ServerSocket serverSocket = new ServerSocket(port);
             while (true) {
                 final Socket socket = serverSocket.accept();
-                ClientManager clientManager = new ClientManager(socket);
+                ClientManagerServerSide clientManager = new ClientManagerServerSide(socket);
                 clientManagers.add(clientManager);
                 System.out.println("New client connected...");
                 new Thread(clientManager).start();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        } catch (IOException ignored) {}
     }
 
-    protected static synchronized void setGame(ClientManager client) {
-        /*TheMindGame clientGame = null;
-        boolean wantsNewGame = true;
-        for (TheMindGame game : games) {
-            if (game.getStatus() == GameStatus.NotStarted &&
-                    game.getClientManagersNumber() < game.getPlayerNumber()) {
-                if (client.decideToPLay()) {
-                    game.addClientManager(client);
-                    clientGame = game;
-                    wantsNewGame = false;
+    protected static synchronized void joinToGame(ClientManagerServerSide client) {
+        if (gameController.isOpen()) {
+            if (client.decideToJoin()) {
+                //join to an existing game
+                String game = gameController.joinAnExistingGame();
+                if (!game.equals("Game not found!")) {
+                    client.setGame(game);
+                    client.setHost(false);
                 }
-                break;
             }
         }
-        if (wantsNewGame) {
-            TheMindGame newGame = new TheMindGame();
-            newGame.addClientManager(client);
-            newGame.setHost(client);
-            games.add(newGame);
-            clientGame = newGame;
-        }
-        client.getGame(clientGame);*/
     }
 
     public static boolean containsToken(String token) {
-        for (ClientManager clientManager : clientManagers) {
+        for (ClientManagerServerSide clientManager : clientManagers) {
             if (clientManager.getAuthToken().equals(token)) {
                 return true;
             }
