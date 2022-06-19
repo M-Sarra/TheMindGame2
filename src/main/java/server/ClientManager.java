@@ -25,6 +25,8 @@ public class ClientManager implements Runnable {
         out = new PrintWriter(socket.getOutputStream());
         this.AuthToken = setAuthToken();
         in = new Scanner(socket.getInputStream());
+        //توی این کلاس
+        //اما باید بگی که با چه پیامی که کاربر بفرسته
     }
 
     public String getName() {

@@ -76,12 +76,16 @@ public class GameController extends GameObserver {
 
     private void AddBot(String name,TheMindGame game) {
         BotPlayer bot = new BotPlayer(name);
-        Join(name,bot,game);
-        bot.Join1(game);
+        String token =  Join(name,bot,game.Name);
+        bot.Join(token,game);
     }
-
-    public String Join(String name, Player observer,TheMindGame game)
+//برای اتصال به بازی باید یک Player رو به این متد بدیم
+    //وقتی که کلاینت مون همون بازیکن هست باید اینجا ClientManager رو بهش بدیم
+    public String Join(String name, Player observer,String gameName)
     {
+        TheMindGame game = this.GetGameByName(gameName);
+        if(game == null)
+            return "Invalid game";
         GameStatus status = game.getStatus();
         if(status != GameStatus.NotStarted)
             return "Invalid connecting time";
