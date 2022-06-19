@@ -38,7 +38,7 @@ public class Client {
         setHostAndPort();
         try {
             Socket socket = new Socket(host, port);
-            GameManager gameManager = new GameManager(socket, this);
+            GameManagerClientSide gameManager = new GameManagerClientSide(socket, this);
             gameManager.startGame();
         } catch (IOException e) {
             e.printStackTrace();

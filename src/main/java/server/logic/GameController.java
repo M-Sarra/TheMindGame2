@@ -58,7 +58,7 @@ public class GameController extends GameObserver {
         return true;
     }
 
-    private TheMindGame GetGameByName(String name) {
+    public TheMindGame GetGameByName(String name) {
         for (TheMindGame game : this.games)
             if(game.Name.equals(name))
                 return game;
@@ -76,16 +76,12 @@ public class GameController extends GameObserver {
 
     private void AddBot(String name,TheMindGame game) {
         BotPlayer bot = new BotPlayer(name);
-        String token =  Join(name,bot,game.Name);
-        bot.Join(token,game);
+        Join(name,bot,game);
+        bot.Join1(game);
     }
-//برای اتصال به بازی باید یک Player رو به این متد بدیم
-    //وقتی که کلاینت مون همون بازیکن هست باید اینجا ClientManager رو بهش بدیم
-    public String Join(String name, Player observer,String gameName)
+
+    public String Join(String name, Player observer,TheMindGame game)
     {
-        TheMindGame game = this.GetGameByName(gameName);
-        if(game == null)
-            return "Invalid game";
         GameStatus status = game.getStatus();
         if(status != GameStatus.NotStarted)
             return "Invalid connecting time";
@@ -110,7 +106,7 @@ public class GameController extends GameObserver {
 
 
     private void Log(String message) {
-        this.ui.DispayEvent( "["+ LocalDateTime.now().format(DateTimeFormatter.ISO_TIME)+"] "+message);
+        this.ui.DisplayEvent( "["+ LocalDateTime.now().format(DateTimeFormatter.ISO_TIME)+"] "+message);
     }
 
     //Todo: سارا
@@ -150,5 +146,23 @@ public class GameController extends GameObserver {
                 return true;
         }
         return false;
+    }
+
+    //TODO : to check if there exist a 'notStarted' game
+    public boolean isOpen() {
+        for (TheMindGame game : this.games) {
+            if (game.getStatus() != GameStatus.NotStarted)
+                return true;
+        }
+        return false;
+    }
+
+    //TODO : to send to server a not started game
+    public String joinAnExistingGame() {
+        for (TheMindGame game : this.games) {
+            if (game.getStatus() != GameStatus.NotStarted)
+                return game.Name;
+        }
+        return "Game not found!";
     }
 }

@@ -1,5 +1,7 @@
 package  server.logic;
+
 public class Example {
+
     public static void main(String[] args) {
         TypeTesterr t = new TypeTesterr();
         t.printType(1.34f+2.54d);

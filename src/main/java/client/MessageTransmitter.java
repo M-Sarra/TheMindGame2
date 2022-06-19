@@ -25,12 +25,18 @@ public class MessageTransmitter {
     }
 
     public String getMessage() {
-        return in.nextLine();
+        try {
+            return in.nextLine();
+        } catch (Exception e) {
+            return "Could not get message from server!!";
+        }
     }
 
     public void sendMessage(String message) {
-        out.println(message);
-        out.flush();
+        try {
+            out.println(message);
+            out.flush();
+        } catch (Exception ignored){}
     }
 
 

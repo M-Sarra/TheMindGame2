@@ -109,4 +109,7 @@ public class BotPlayer extends Player {
     public void NotifyHeartMissed() {
 
     }
+
+    public void Join1(TheMindGame game) {
+    }
 }

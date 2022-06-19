@@ -4,7 +4,7 @@ import client.UI.ConsoleManager;
 
 import java.net.Socket;
 
-public class GameManager {
+public class GameManagerClientSide {
     private final Client client;
     private final MessageTransmitter transmitter;
     private final ConsoleManager consoleManager;
@@ -13,7 +13,7 @@ public class GameManager {
     private String message = "";
     private boolean isHost = true;
 
-    public GameManager(Socket socket, Client client) {
+    public GameManagerClientSide(Socket socket, Client client) {
         this.client = client;
         transmitter = new MessageTransmitter(socket);
         consoleManager = new ConsoleManager();
@@ -34,18 +34,21 @@ public class GameManager {
     }
 
     private void setDecisionTime() {
-        boolean decisionTime = Boolean.parseBoolean(transmitter.getMessage());
+        boolean decisionTime = false;
+        try {
+            decisionTime = Boolean.parseBoolean(transmitter.getMessage());
+        } catch (Exception ignored) {}
         if (decisionTime) {
             consoleManager.sendMessage("There is a 'notStarted' game. Do you want to join?\n" +
-                    "type y or n");
+                    "type y or n.");
             String answer = consoleManager.getMessage();
             while (true) {
                 if (answer.equals("y") || answer.equals("Y")) {
-                    transmitter.sendMessage("{'decision': true}");
+                    transmitter.sendMessage("true");
                     isHost = false;
                     break;
                 } else if (answer.equals("n") || answer.equals("N")) {
-                    transmitter.sendMessage("{'decision': false}");
+                    transmitter.sendMessage("false");
                     break;
                 }
                 else {
@@ -61,9 +64,19 @@ public class GameManager {
         client.setName(consoleManager.getMessage());
         transmitter.sendMessage(client.getName());
         if (isHost) {
-            consoleManager.sendMessage("Enter the number of players:");
-            client.setPlayerNumber(Integer.parseInt(consoleManager.getMessage()));
+            getBotNumber();
+        }
+    }
+
+    private void getBotNumber() {
+        consoleManager.sendMessage("Enter the number of players (2 - 12):");
+        try {
+            int playerNumber = Integer.parseInt(consoleManager.getMessage());
+            if (playerNumber < 2 || playerNumber > 12) getBotNumber();
+            client.setPlayerNumber(playerNumber);
             transmitter.sendMessage(String.valueOf(client.getPlayerNumber()));
+        } catch (Exception e) {
+            getBotNumber();
         }
     }
 
@@ -78,7 +91,7 @@ public class GameManager {
 
     private void orderToStart() {
         if (isHost) {
-            consoleManager.sendMessage("Type 'start' to start the game.");
+            consoleManager.sendMessage("Whenever you want to start the game, type 'start'.");
             String message = consoleManager.getMessage();
             if (message.equals("start")) {
                 transmitter.sendMessage("start");
@@ -92,6 +105,7 @@ public class GameManager {
     private void start() {
         do {
             message = transmitter.getMessage();
+            //ask to use ninja card first of each round
             if (message.equals("true")) {
                 consoleManager.sendMessage("Do you want to use ninja card? type 'y' or 'n'.");
                 message = consoleManager.getMessage();

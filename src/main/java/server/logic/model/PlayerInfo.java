@@ -12,11 +12,7 @@ public class PlayerInfo {
     public String Token;
     public List<Integer> hand;
     public Player player;
-    public boolean HasNinjaCard;
-    public boolean ForceToPlay;
-
     public PlayerInfo(String name, String token,Player player) {
-        this.ForceToPlay = false;
         this.hand = new ArrayList<>();
         this.Name = name;
         this.Token = token;
@@ -27,4 +23,5 @@ public class PlayerInfo {
         this.hand.add(cardNumber);
         this.player.GiveCard(cardNumber);
     }
+
 }

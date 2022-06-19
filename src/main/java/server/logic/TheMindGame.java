@@ -45,13 +45,12 @@ public class TheMindGame {
             return "Game is "+this.status;
         this.ChangeStatus(GameStatus.Starting);
         this.DealHeartCards();
-        this.DealNinjaCards();
         ChangeLevel(1);
         return "Success";
     }
 
     private void ChangeLevel(int level) {
-        if(level > 12) {
+        if(level > 25) {
             this.ChangeStatus(GameStatus.GameOver);
             return;
         }
@@ -67,18 +66,6 @@ public class TheMindGame {
         this.heartCards = count;
     }
 
-    private void DealNinjaCards() {
-        for (PlayerInfo player: this.players) {
-            player.HasNinjaCard = true;
-        }
-    }
-    private void ForceToPlay() {
-        for (PlayerInfo player:this.players) {
-             if(player.hand.stream().count() > 0)
-                 player.ForceToPlay = true;
-        }
-    }
-
     private void Deal() {
         for (PlayerInfo player:this.players) {
             for (int i = 0 ; i < this.level;i++) {
@@ -90,6 +77,7 @@ public class TheMindGame {
     }
 
     private int GetUnusedRandomCard() {
+
         int card ;
         do {
             card = this.random.nextInt(100)+1;
@@ -129,16 +117,6 @@ public class TheMindGame {
         });
         inform.start();
     }
-
-    private void NotifyPlayingNinjaCard(String player) {
-        Thread inform = new Thread(()->{
-            for (GameObserver observer:this.observers) {
-                Thread observerInform = new Thread(()-> observer.NotifyPlaysNinjaCard(player));
-                observerInform.start();;
-            }
-        });
-        inform.start();
-    }
     private void NotifyHeartMissed() {
         Thread inform = new Thread(()->{
             for (GameObserver observer:this.observers
@@ -155,45 +133,25 @@ public class TheMindGame {
         this.observers.add(player.player);
     }
 
-    public  String PlayNinja(String token)
-    {
-        synchronized (this) {
-            if (this.status != GameStatus.LevelStarted && this.status != GameStatus.NinjaPlayed)
-                return "Invalid action";
-            PlayerInfo player = this.controller.GetPlayerByToken(token);
-            if (player == null)
-                return "Invalid player";
-            if (!player.HasNinjaCard)
-                return "No Ninja card";
-            NotifyPlayingNinjaCard(player.Name);
-            this.ChangeStatus(GameStatus.NinjaPlayed);
-            return "Success";
-        }
-    }
 
     public String Play(String token, Integer card) {
-        synchronized (this) {
-            if (this.status != GameStatus.LevelStarted && this.status != GameStatus.NinjaPlayed)
-                return "Invalid action";
-            PlayerInfo player = this.controller.GetPlayerByToken(token);
-            if (player == null)
-                return "Invalid player";
-            if (!player.hand.contains(card))
-                return "Invalid Card";
-            NotifyPlayingCard(player.Name, card);
-            if (!player.ForceToPlay) {
-                this.usedCards.remove(card);
-                if (card < this.lastPlayedCard)
-                    this.MissHeart();
-                this.lastPlayedCard = card;
-                if (this.status == GameStatus.GameOver)
-                    return "Game Over";
-                if (this.usedCards.stream().count() <= 0)
-                    this.ChangeLevel(this.level + 1);
-            }
-            player.ForceToPlay = false;
-            return "Success";
-        }
+        if(this.status !=  GameStatus.LevelStarted)
+            return "Invalid action";
+        PlayerInfo player = this.controller.GetPlayerByToken(token);
+        if(player == null)
+            return "Invalid player";
+        if(!player.hand.contains(card))
+            return "Invalid Card";
+        NotifyPlayingCard(player.Name,card);
+        this.usedCards.remove(card);
+        if(card < this.lastPlayedCard)
+            this.MissHeart();
+        this.lastPlayedCard = card;
+        if(this.status == GameStatus.GameOver)
+            return "Game Over";
+        if(this.usedCards.stream().count() <= 0)
+            this.ChangeLevel(this.level+1);
+        return "Success";
     }
 
     private void MissHeart() {
