@@ -69,7 +69,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
         getNameAndBotNo();
         if (isHost) {
             this.setGame(String.valueOf(Server.gameController.GetGames().size() + 1));
-            Server.gameController.CreateNewGame(this.gameName, this.playerNumber);
+            Server.gameController.CreateNewGame(this.gameName);
         }
         transmitter.sendMessage(AuthToken);
         addPlayerToGame();
@@ -106,7 +106,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
     }
 
     private void addPlayerToGame() {
-        Server.gameController.Join(this.name, this, this.gameName);
+        Server.gameController.Join(this, this.gameName);
     }
 
     //TODO : start game
@@ -144,7 +144,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
     public void play() {
         String message = "";
         int time = 0;
-        while (this.status != GameStatus.GameOver || this.status != GameStatus.win) {
+        while (this.status != GameStatus.GameOver || this.status != GameStatus.Win) {
             if (this.status == GameStatus.NotStarted) continue;
             if (time == 0) {
                 transmitter.sendMessage
@@ -183,7 +183,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
         //send game status to client
         this.status = status;
         if (status == GameStatus.GameOver ||
-        status == GameStatus.win) {
+        status == GameStatus.Win) {
             try {
                 this.socket.close();
             } catch (IOException ignored) {}
@@ -212,6 +212,11 @@ public class ClientManagerServerSide extends Player implements Runnable {
     @Override
     public void NotifyHeartMissed() {
         this.heartMissed = true;
+    }
+
+    @Override
+    public String GetName() {
+        return this.name;
     }
 
     @Override

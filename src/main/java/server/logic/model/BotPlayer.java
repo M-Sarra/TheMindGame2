@@ -90,6 +90,11 @@ public class BotPlayer extends Player {
     }
 
     @Override
+    public String GetName() {
+        return this.name;
+    }
+
+    @Override
     public void GiveCard(Integer card) {
         this.hand.add(card);
         this.hand.sort(Integer::compareTo);

@@ -15,10 +15,10 @@ public class PlayerInfo {
     public boolean HasNinjaCard;
     public boolean ForceToPlay;
 
-    public PlayerInfo(String name, String token,Player player) {
+    public PlayerInfo( String token,Player player) {
         this.ForceToPlay = false;
         this.hand = new ArrayList<>();
-        this.Name = name;
+        this.Name = player.GetName();
         this.Token = token;
         this.player = player;
     }

@@ -8,8 +8,12 @@ public class Example {
         t.printType(1.34d+2.54f);
         try {
             GameController controller = new GameController(new TheMindGameUI());
-            controller.CreateNewGame("Default",5);
-            controller.StartGame(null,"Default");
+            String gameName = "Default";
+            controller.CreateNewGame(gameName);
+            int count = 5;
+            for (int i = 0 ; i < count;i++)
+                controller.AddBot(null,"Bot"+i,gameName);
+            controller.StartGame(null,gameName);
             while (controller.IsOpen()) {
                 Thread.sleep(50);
             }

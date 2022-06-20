@@ -1,9 +1,6 @@
 package server.logic;
 
-import server.logic.model.BotPlayer;
-import server.logic.model.GameObserver;
-import server.logic.model.Player;
-import server.logic.model.PlayerInfo;
+import server.logic.model.*;
 // A Java program for a Serverside
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
@@ -11,7 +8,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GameController extends GameObserver {
+public class GameController extends GameObserver implements IGameController {
     private List<TheMindGame> games;
     private TheMindGameUI ui;
     private  List<PlayerInfo> players;
@@ -43,18 +40,13 @@ public class GameController extends GameObserver {
         return null;
     }
 
-
-    public boolean CreateNewGame(String name, int botCount) {
+    @Override
+    public boolean CreateNewGame(String name) {
         TheMindGame game = GetGameByName(name);
         if (game != null) return false;
         game = new TheMindGame(name,this);
         this.games.add(game);
         game.AddObserver(this);
-        for (int i = 0; i < botCount;i++) {
-            AddBot("Bot"+i,game);
-            //AddBot("Fateme");
-            //AddBot("Abc");
-        }
         return true;
     }
 
@@ -74,14 +66,20 @@ public class GameController extends GameObserver {
         return gameNames;
     }
 
-    private void AddBot(String name,TheMindGame game) {
+    @Override
+    public String AddBot(String token, String name,String gameName) {
+        TheMindGame game = this.GetGameByName(gameName);
+        if(game == null)
+            return "Invalid game.";
         BotPlayer bot = new BotPlayer(name);
-        String token =  Join(name,bot,game.Name);
-        bot.Join(token,game);
+        String botToken =  Join(bot,gameName);
+        bot.Join(botToken,game);
+        return "Success";
     }
     //برای اتصال به بازی باید یک Player رو به این متد بدیم
     //وقتی که کلاینت مون همون بازیکن هست باید اینجا ClientManager رو بهش بدیم
-    public String Join(String name, Player observer,String gameName)
+    @Override
+    public String Join( Player observer,String gameName)
     {
         TheMindGame game = this.GetGameByName(gameName);
         if(game == null)
@@ -89,11 +87,11 @@ public class GameController extends GameObserver {
         GameStatus status = game.getStatus();
         if(status != GameStatus.NotStarted)
             return "Invalid connecting time";
-        PlayerInfo player = GetPlayerByName(name);
+        PlayerInfo player = GetPlayerByName(observer.GetName());
         if(player != null)
             return "duplicative name";
         String token = GetUnusedToken();
-        player = new PlayerInfo(name,token,observer);
+        player = new PlayerInfo(token,observer);
         this.players.add(player);
         game.AddPlayer(player);
         return token;
@@ -143,8 +141,6 @@ public class GameController extends GameObserver {
 
     public  boolean IsOpen() {
         for (TheMindGame game : this.games) {
-
-
             GameStatus status = game.getStatus();
             if (status != GameStatus.GameOver)
                 return true;

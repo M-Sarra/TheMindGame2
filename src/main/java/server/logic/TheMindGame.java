@@ -1,7 +1,6 @@
 package server.logic;
 
 import server.logic.model.GameObserver;
-import server.logic.model.Player;
 import server.logic.model.PlayerInfo;
 
 import java.security.*;
@@ -52,14 +51,16 @@ public class TheMindGame {
 
     private void ChangeLevel(int level) {
         if(level > 12) {
+            this.ChangeStatus(GameStatus.Win);
             this.ChangeStatus(GameStatus.GameOver);
             return;
         }
+        this.ChangeStatus(GameStatus.Dealing);
         this.level = level;
         this.lastPlayedCard = 0;
         this.usedCards.clear();
         this.Deal();
-        this.ChangeStatus(GameStatus.LevelStarted);
+        this.ChangeStatus(GameStatus.Playing);
     }
 
     private void DealHeartCards() {
@@ -158,7 +159,7 @@ public class TheMindGame {
     public  String PlayNinja(String token)
     {
         synchronized (this) {
-            if (this.status != GameStatus.LevelStarted && this.status != GameStatus.NinjaPlayed)
+            if (this.status != GameStatus.Playing)
                 return "Invalid action";
             PlayerInfo player = this.controller.GetPlayerByToken(token);
             if (player == null)
@@ -166,14 +167,14 @@ public class TheMindGame {
             if (!player.HasNinjaCard)
                 return "No Ninja card";
             NotifyPlayingNinjaCard(player.Name);
-            this.ChangeStatus(GameStatus.NinjaPlayed);
+            //this.ChangeStatus(GameStatus.NinjaPlayed);
             return "Success";
         }
     }
 
     public String Play(String token, Integer card) {
         synchronized (this) {
-            if (this.status != GameStatus.LevelStarted && this.status != GameStatus.NinjaPlayed)
+            if (this.status != GameStatus.Playing)
                 return "Invalid action";
             PlayerInfo player = this.controller.GetPlayerByToken(token);
             if (player == null)
@@ -199,8 +200,10 @@ public class TheMindGame {
     private void MissHeart() {
         this.heartCards --;
         this.NotifyHeartMissed();
-        if(this.heartCards == 0)
+        if(this.heartCards == 0) {
+            this.ChangeStatus(GameStatus.Lost);
             this.ChangeStatus(GameStatus.GameOver);
+        }
     }
 
     public Integer GetLastPlayedCard() {
