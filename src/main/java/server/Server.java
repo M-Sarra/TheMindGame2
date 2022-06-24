@@ -1,14 +1,15 @@
 package server;
 
-
 import server.logic.GameController;
 import server.logic.TheMindGameUI;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 public class Server {
     private final int port;
@@ -56,10 +57,15 @@ public class Server {
         return false;
     }
 
-    //TODO
     private int setPort() {
-        //read from file by catch and try
-        return 8000;
+        try {
+            Properties prop = new Properties();
+            FileInputStream ip = new FileInputStream("src/main/java/server/file/server.properties");
+            prop.load(ip);
+            return Integer.parseInt(prop.getProperty("port"));
+        } catch (IOException e) {
+            return  8000;
+        }
     }
 
 }

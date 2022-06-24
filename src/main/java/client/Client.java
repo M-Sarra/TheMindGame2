@@ -1,7 +1,10 @@
 package client;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.Properties;
 
 public class Client {
     private String host;
@@ -43,13 +46,18 @@ public class Client {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
-    //TODO
     private void setHostAndPort() {
-        //read from file by catch and try
-        host = "localhost";
-        port = 8000;
+        try {
+            Properties prop = new Properties();
+            FileInputStream ip = new FileInputStream("src/main/java/client/file/client.properties");
+            prop.load(ip);
+            host = prop.getProperty("host");
+            port = Integer.parseInt(prop.getProperty("port"));
+        } catch (IOException e) {
+            host = "localhost";
+            port = 8000;
+        }
     }
 }
