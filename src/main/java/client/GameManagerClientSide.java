@@ -3,6 +3,9 @@ package client;
 import client.UI.ConsoleManager;
 
 import java.net.Socket;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class GameManagerClientSide {
     private final Client client;
@@ -36,19 +39,21 @@ public class GameManagerClientSide {
     private void setDecisionTime() {
         boolean decisionTime = false;
         try {
-            decisionTime = Boolean.parseBoolean(transmitter.getMessage());
+            String message = transmitter.getMessage();
+            if (message.contains("decisionTime"))
+                decisionTime = Boolean.parseBoolean(message.split(" ")[1]);
         } catch (Exception ignored) {}
         if (decisionTime) {
-            consoleManager.sendMessage("There is a 'notStarted' game. Do you want to join?\n" +
+            consoleManager.sendMessage("There is a 'not started' game. Do you want to join?\n" +
                     "type y or n.");
             String answer = consoleManager.getMessage();
             while (true) {
                 if (answer.equals("y") || answer.equals("Y")) {
-                    transmitter.sendMessage("true");
+                    transmitter.sendMessage("joinToGame: true");
                     isHost = false;
                     break;
                 } else if (answer.equals("n") || answer.equals("N")) {
-                    transmitter.sendMessage("false");
+                    transmitter.sendMessage("joinToGame: false");
                     break;
                 }
                 else {
@@ -59,10 +64,9 @@ public class GameManagerClientSide {
     }
 
     private void getNameAndBotNo() {
-        //send message duo to a better way
         consoleManager.sendMessage("Enter your name:");
         client.setName(consoleManager.getMessage());
-        transmitter.sendMessage(client.getName());
+        transmitter.sendMessage("name: " + client.getName());
         if (isHost) {
             getBotNumber();
         }
@@ -74,18 +78,19 @@ public class GameManagerClientSide {
             int playerNumber = Integer.parseInt(consoleManager.getMessage());
             if (playerNumber < 2 || playerNumber > 12) getBotNumber();
             client.setPlayerNumber(playerNumber);
-            transmitter.sendMessage(String.valueOf(client.getPlayerNumber()));
+            transmitter.sendMessage("playerNumber: " + String.valueOf(client.getPlayerNumber()));
         } catch (Exception e) {
             getBotNumber();
         }
     }
 
     private void getAuthToken() {
-        //check if message contains auth token
         String message = transmitter.getMessage();
         try {
-            client.setAuthToken(Integer.parseInt(message));
-            consoleManager.sendMessage("AuthToken: " + client.getAuthToken());
+            if (message.contains("AuthToken")) {
+                client.setAuthToken(message.split(" ")[1]);
+                consoleManager.sendMessage("AuthToken: " + client.getAuthToken());
+            }
         } catch (NumberFormatException ignored) {}
     }
 
@@ -106,26 +111,16 @@ public class GameManagerClientSide {
         do {
             message = transmitter.getMessage();
             //ask to use ninja card first of each round
-            if (message.equals("true")) {
-                consoleManager.sendMessage("Do you want to use ninja card? type 'y' or 'n'.");
-                message = consoleManager.getMessage();
-                if (message.equals("y") || message.equals("Y")) {
-                    transmitter.sendMessage("true");
-                }
-                else transmitter.sendMessage("false");
-            }
+            askToUseNinja(message);
 
             messageGetter = new Thread(() -> {
                 message = transmitter.getMessage();
                 messageSender.interrupt();
-                //deserialize message
-
                 consoleManager.sendMessage(message);
             });
 
             messageSender = new Thread(() -> {
                 message = consoleManager.getMessage();
-                //message could be invalid yet
                 if (isValidNumber(message)) {
                     messageGetter.interrupt();
                     transmitter.sendMessage(message);
@@ -138,7 +133,37 @@ public class GameManagerClientSide {
         } while (message.contains("Game finished"));
     }
 
+    private void askToUseNinja(String message) {
+        boolean answer = false;
+        if (message.contains("useNinjaCard")) {
+            try {
+                answer = Boolean.parseBoolean(message.split(" ")[1]);
+            } catch (Exception ignored) {}
+        }
+        if (answer) {
+            AtomicReference<String> answer1 = new AtomicReference<>("n");
+            consoleManager.sendMessage("Do you want to use ninja card? type 'y' or 'n'.");
+            Thread ninjaCard = new Thread(() -> {
+                String answer2 = consoleManager.getMessage();
+                answer1.set(answer2);
+            });
+            ninjaCard.start();
+            Timer timer = new Timer();
+            timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    ninjaCard.interrupt();
+                }
+            }, 7000);
+            if (answer1.equals("y") || answer1.equals("Y")) {
+                transmitter.sendMessage("useNinjaCard: true");
+            }
+            else transmitter.sendMessage("useNinjaCard: false");
+        }
+    }
+
     private boolean isValidNumber(String message) {
+        if (message.contains("message")) return true;
         int n;
         try {
             n = Integer.parseInt(message);

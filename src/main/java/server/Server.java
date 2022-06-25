@@ -38,7 +38,6 @@ public class Server {
     protected static synchronized void joinToGame(ClientManagerServerSide client) {
         if (gameController.isOpen()) {
             if (client.decideToJoin()) {
-                //join to an existing game
                 String game = gameController.joinAnExistingGame();
                 if (!game.equals("Game not found!")) {
                     client.setGame(game);

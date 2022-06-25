@@ -71,7 +71,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
             this.setGame(String.valueOf(Server.gameController.GetGames().size() + 1));
             Server.gameController.CreateNewGame(this.gameName);
         }
-        transmitter.sendMessage(AuthToken);
+        transmitter.sendMessage("AuthToken: " + AuthToken);
         addPlayerToGame();
         getStartOrder();
         play();
@@ -79,26 +79,34 @@ public class ClientManagerServerSide extends Player implements Runnable {
 
     protected boolean decideToJoin() {
         decisionTime = true;
-        transmitter.sendMessage("true");
+        transmitter.sendMessage("decisionTime: true");
         String decision = transmitter.getMessage();
         boolean answer = false;
         try {
-            answer = Boolean.parseBoolean(decision);
-        } catch (Exception ignored) {
-        }
+            if (decision.contains("joinToGame"))
+                answer = Boolean.parseBoolean(decision.split(" ")[1]);
+        } catch (Exception ignored) {}
         this.isHost = !answer;
         return answer;
     }
 
-    //TODO : set game's player number
     private void getNameAndBotNo() {
         if (!decisionTime) {
-            transmitter.sendMessage("false");
+            transmitter.sendMessage("decisionTime: false");
         }
-        name = transmitter.getMessage();
+        try {
+            String message = transmitter.getMessage();
+            if (message.contains("name"))
+                name = message.split(" ")[1];
+        } catch (Exception e) {
+            SecureRandom random = new SecureRandom();
+            name = String.valueOf(random.nextInt());
+        }
         if (isHost) {
             try {
-                this.playerNumber = Integer.parseInt(transmitter.getMessage());
+                String message = transmitter.getMessage();
+                if (message.contains("playerNumber"))
+                    this.playerNumber = Integer.parseInt(message.split(" ")[1]);
             } catch (NumberFormatException e) {
                 this.playerNumber = 4;
             }
@@ -109,7 +117,6 @@ public class ClientManagerServerSide extends Player implements Runnable {
         Server.gameController.Join(this, this.gameName);
     }
 
-    //TODO : start game
     private void getStartOrder() {
         String token = this.AuthToken;
         String gameName = this.gameName;
@@ -123,17 +130,19 @@ public class ClientManagerServerSide extends Player implements Runnable {
         }
     }
 
-    //TODO : Call this method to ask client to use ninja card
     public void decideToUseNinja() {
         if (this.hand.isEmpty()) {
-            transmitter.sendMessage("false");
+            transmitter.sendMessage("useNinjaCard: false");
             setUsingNinjaCard(false);
         }
         else {
-            transmitter.sendMessage("true");
+            transmitter.sendMessage("useNinjaCard: true");
             try {
-                boolean useNinja = Boolean.parseBoolean(transmitter.getMessage());
-                setUsingNinjaCard(useNinja);
+                String message = transmitter.getMessage();
+                if (message.contains("useNinjaCard")) {
+                    boolean useNinja = Boolean.parseBoolean(message.split(" ")[1]);
+                    setUsingNinjaCard(useNinja);
+                }
             } catch (Exception e) {
                 setUsingNinjaCard(false);
             }
@@ -155,7 +164,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
             if (message.equals("Could not get message!!")) continue;
             if (message.contains("cardNumber")) {
                 try {
-                    int cardNumber = Integer.parseInt(message);
+                    int cardNumber = Integer.parseInt(message.split(" ")[1]);
                     if (!this.hand.contains(cardNumber) &&
                             Collections.min(this.hand) != cardNumber) return;
                     Server.gameController.GetGameByName(this.gameName).Play(this.AuthToken, cardNumber);

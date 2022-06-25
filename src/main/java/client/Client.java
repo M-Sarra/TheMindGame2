@@ -11,7 +11,7 @@ public class Client {
     private int port;
     private String name;
     private int playerNumber;
-    private int AuthToken;
+    private String AuthToken;
 
     public void setName(String name) {
         this.name = name;
@@ -21,7 +21,7 @@ public class Client {
         this.playerNumber = playerNumber;
     }
 
-    public void setAuthToken(int authToken) {
+    public void setAuthToken(String authToken) {
         AuthToken = authToken;
     }
 
@@ -33,7 +33,7 @@ public class Client {
         return playerNumber;
     }
 
-    public int getAuthToken() {
+    public String getAuthToken() {
         return AuthToken;
     }
 
