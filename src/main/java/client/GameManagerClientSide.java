@@ -113,7 +113,6 @@ public class GameManagerClientSide {
     private void start() {
         do {
             message = transmitter.getMessage();
-            askToUseNinja(message);
 
             messageGetter = new Thread(() -> {
                 message = transmitter.getMessage();
@@ -126,6 +125,7 @@ public class GameManagerClientSide {
                 }
                 else {
                     if (message.contains("last played card")) this.timeStatus = TimeStatus.PLAY;
+                    if (message.contains("useNinjaCard")) askToUseNinja(message);
                     consoleManager.sendMessage(message);
                 }
                 messageSender.interrupt();
@@ -150,11 +150,9 @@ public class GameManagerClientSide {
 
     private void askToUseNinja(String message) {
         boolean answer = false;
-        if (message.contains("useNinjaCard")) {
-            try {
-                answer = Boolean.parseBoolean(message.split(" ")[1]);
-            } catch (Exception ignored) {}
-        }
+        try {
+            answer = Boolean.parseBoolean(message.split(" ")[1]);
+        } catch (Exception ignored) {}
         if (answer) {
             AtomicReference<String> answer1 = new AtomicReference<>("n");
             consoleManager.sendMessage("Do you want to use ninja card? type 'y' or 'n'.");
