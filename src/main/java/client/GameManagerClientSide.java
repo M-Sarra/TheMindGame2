@@ -134,7 +134,7 @@ public class GameManagerClientSide {
             messageSender = new Thread(() -> {
                 if (timeStatus == TimeStatus.PLAY) {
                     message = consoleManager.getMessage();
-                    if (isValidNumber(message)) {
+                    if (isValidMessage(message)) {
                         this.timeStatus = TimeStatus.GET_STATUS;
                         messageGetter.interrupt();
                         transmitter.sendMessage(message);
@@ -177,7 +177,7 @@ public class GameManagerClientSide {
         }
     }
 
-    private boolean isValidNumber(String message) {
+    private boolean isValidMessage(String message) {
         if (message.contains("message")) {
             try {
                 String emoji = message.split(" ")[3];
@@ -191,6 +191,7 @@ public class GameManagerClientSide {
         int n;
         try {
             n = Integer.parseInt(message);
+            this.message = "cardNumber: " + n;
         } catch (NumberFormatException e) {
             consoleManager.sendMessage("Invalid input!");
             return false;
