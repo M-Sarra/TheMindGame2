@@ -21,9 +21,11 @@ public class BotPlayer extends Player {
     private final int InitialDelay = 5000;
     private SecureRandom random;
     private boolean forcePlayCard;
+    private boolean ninjaProposed;
 
     public BotPlayer(String name) {
         //name is not required
+        this.ninjaProposed = false;
         this.random = new SecureRandom();
         this.forcePlayCard = false;
         this.time = LocalDateTime.now();
@@ -44,11 +46,18 @@ public class BotPlayer extends Player {
     }
 
     public  void Play() {
-        int r = this.random.nextInt(1000);
-        if(!this.forcePlayCard && r < 1)
-            this.game.PlayNinja(this.token);
-        else {
-            PlayCard();
+        if(this.game == null)
+            return;
+        GameStatus status = this.game.getStatus();
+        if(status == GameStatus.Playing) {
+            int r = this.random.nextInt(1000);
+            if (!this.forcePlayCard && !this.ninjaProposed && this.game.GetNinjaCards()> 0 && r < 10) {
+                this.ninjaProposed = true;
+                this.game.ProposeNinja(this.token);
+            }
+            else {
+                PlayCard();
+            }
         }
     }
 
@@ -102,11 +111,15 @@ public class BotPlayer extends Player {
 
     @Override
     public void NotifyPlaysCard(String player, Integer card) {
-
+        this.ninjaProposed = false;
     }
 
     @Override
-    public void NotifyPlaysNinjaCard(String player) {
+
+    public void NotifyNinjaPropose(String player) {
+    }
+    @Override
+    public void NotifyNinjaAgreement() {
         this.forcePlayCard = true;
     }
 
@@ -115,6 +128,4 @@ public class BotPlayer extends Player {
 
     }
 
-    public void Join1(TheMindGame game) {
-    }
 }

@@ -15,6 +15,7 @@ public class TheMindGame {
     private List<GameObserver> observers;
     private List<Integer> usedCards;
     private  int heartCards;
+    private int ninjaCards;
     private Integer lastPlayedCard;
     private SecureRandom random;
 
@@ -44,7 +45,8 @@ public class TheMindGame {
             return "Game is "+this.status;
         this.ChangeStatus(GameStatus.Starting);
         this.DealHeartCards();
-        this.DealNinjaCards();
+        this.ninjaCards = 2;
+        this.ResetNinjas();
         ChangeLevel(1);
         return "Success";
     }
@@ -68,15 +70,15 @@ public class TheMindGame {
         this.heartCards = count;
     }
 
-    private void DealNinjaCards() {
+    private void ResetNinjas() {
         for (PlayerInfo player: this.players) {
-            player.HasNinjaCard = true;
+            player.ProposesNinjaCard = false;
         }
     }
     private void ForceToPlay() {
         for (PlayerInfo player:this.players) {
             if(player.hand.stream().count() > 0)
-                player.ForceToPlay = true;
+                player.ForceToPlay1 = true;
         }
     }
 
@@ -131,10 +133,19 @@ public class TheMindGame {
         inform.start();
     }
 
-    private void NotifyPlayingNinjaCard(String player) {
+    private void NotifyNinjaPropose(String player) {
         Thread inform = new Thread(()->{
             for (GameObserver observer:this.observers) {
-                Thread observerInform = new Thread(()-> observer.NotifyPlaysNinjaCard(player));
+                Thread observerInform = new Thread(()-> observer.NotifyNinjaPropose(player));
+                observerInform.start();;
+            }
+        });
+        inform.start();
+    }
+    private void NotifyNinjaAgreement() {
+        Thread inform = new Thread(()->{
+            for (GameObserver observer:this.observers) {
+                Thread observerInform = new Thread(()-> observer.NotifyNinjaAgreement());
                 observerInform.start();;
             }
         });
@@ -156,7 +167,7 @@ public class TheMindGame {
         this.observers.add(player.player);
     }
 
-    public  String PlayNinja(String token)
+    public  String ProposeNinja(String token)
     {
         synchronized (this) {
             if (this.status != GameStatus.Playing)
@@ -164,12 +175,28 @@ public class TheMindGame {
             PlayerInfo player = this.controller.GetPlayerByToken(token);
             if (player == null)
                 return "Invalid player";
-            if (!player.HasNinjaCard)
+            if (this.ninjaCards <= 0)
                 return "No Ninja card";
-            NotifyPlayingNinjaCard(player.Name);
+            player.ProposesNinjaCard = true;
+            NotifyNinjaPropose(player.Name);
+            if(IsNinjaAgreement())
+            {
+                NotifyNinjaAgreement();
+                this.ninjaCards--;
+                this.ForceToPlay();
+            }
             //this.ChangeStatus(GameStatus.NinjaPlayed);
             return "Success";
         }
+    }
+
+    private boolean IsNinjaAgreement() {
+        for (PlayerInfo player:this.players             ) {
+            if(!player.ProposesNinjaCard)
+                return false;
+
+        }
+        return true;
     }
 
     public String Play(String token, Integer card) {
@@ -182,17 +209,18 @@ public class TheMindGame {
             if (!player.hand.contains(card))
                 return "Invalid Card";
             NotifyPlayingCard(player.Name, card);
-            if (!player.ForceToPlay) {
-                this.usedCards.remove(card);
+            this.usedCards.remove(card);
+            if (!player.ForceToPlay1) {
                 if (card < this.lastPlayedCard)
                     this.MissHeart();
                 this.lastPlayedCard = card;
-                if (this.status == GameStatus.GameOver)
-                    return "Game Over";
-                if (this.usedCards.stream().count() <= 0)
-                    this.ChangeLevel(this.level + 1);
             }
-            player.ForceToPlay = false;
+            if (this.status == GameStatus.GameOver)
+                return "Game Over";
+            if (this.usedCards.stream().count() <= 0)
+                this.ChangeLevel(this.level + 1);
+            player.ForceToPlay1 = false;
+            this.ResetNinjas();
             return "Success";
         }
     }
@@ -231,5 +259,10 @@ public class TheMindGame {
     //TODO : send heart number
     public int getHeartNumber() {
         return this.heartCards;
+    }
+
+    public  int GetNinjaCards()
+    {
+        return this.ninjaCards;
     }
 }

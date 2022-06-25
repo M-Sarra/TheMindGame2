@@ -205,7 +205,11 @@ public class ClientManagerServerSide extends Player implements Runnable {
     }
 
     @Override
-    public void NotifyPlaysNinjaCard(String player) {
+    public void NotifyNinjaPropose(String player) {
+        //Todo: برای اطلاع رسانی نینجاست
+    }
+    @Override
+    public void NotifyNinjaAgreement() {
         //Todo: برای اطلاع رسانی نینجاست
     }
 

@@ -130,8 +130,12 @@ public class GameController extends GameObserver implements IGameController {
     }
 
     @Override
-    public void NotifyPlaysNinjaCard(String player) {
-        this.Log(player + " plays Ninja.");
+    public void NotifyNinjaPropose(String player) {
+        this.Log(player + " proposes Ninja.");
+    }
+    @Override
+    public void NotifyNinjaAgreement() {
+        this.Log( "Ninja Agreement.");
     }
 
     @Override
