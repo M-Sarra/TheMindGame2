@@ -20,11 +20,9 @@ public class ClientManagerServerSide extends Player implements Runnable {
     private int playerNumber;
     private final MessageTransmitter transmitter;
     private boolean decisionTime = false;
-    private boolean usingNinjaCard;
     private String gameName;
     private List<Integer> hand;
     private GameStatus status;
-    private boolean heartMissed = false;
 
     public ClientManagerServerSide(Socket socket) {
         this.socket = socket;
@@ -48,7 +46,6 @@ public class ClientManagerServerSide extends Player implements Runnable {
     }
 
     public void setUsingNinjaCard(boolean useNinjaCard) {
-        this.usingNinjaCard = useNinjaCard;
         Server.gameController.GetGameByName(this.gameName).setNinjaResult(this.AuthToken, useNinjaCard);
     }
 
@@ -152,8 +149,11 @@ public class ClientManagerServerSide extends Player implements Runnable {
         while (this.status != GameStatus.GameOver || this.status != GameStatus.Win) {
             if (this.status == GameStatus.NotStarted) continue;
             if (time == 0) {
-                transmitter.sendMessage
-                        (Server.gameController.GetGameByName(this.gameName).getPlayersName().toString());
+                message = "Game started\n" +
+                        "Game name: " + this.gameName +
+                        "Player's: " +
+                        Server.gameController.GetGameByName(this.gameName).getPlayersName().toString();
+                transmitter.sendMessage(message);
                 time++;
             }
             message = transmitter.getMessage();
@@ -187,6 +187,9 @@ public class ClientManagerServerSide extends Player implements Runnable {
             try {
                 this.socket.close();
             } catch (IOException ignored) {}
+            if (this.isHost) {
+                Server.gameController.GetGames().remove(this.gameName);
+            }
         }
     }
 
@@ -222,7 +225,6 @@ public class ClientManagerServerSide extends Player implements Runnable {
 
     @Override
     public void NotifyHeartMissed() {
-        this.heartMissed = true;
         transmitter.sendMessage("1 heart missed. Heart card number: " +
                 Server.gameController.GetGameByName(this.gameName).getHeartNumber());
     }
@@ -270,12 +272,12 @@ public class ClientManagerServerSide extends Player implements Runnable {
                 String name = message.split(" ")[2];
                 List<String> names =Server.gameController.GetGameByName(gameName).getPlayersName();
                 if (!names.contains(name)) return;
-                String emoji = message.split(" ")[4];
+                String emoji = message.split(" ")[3];
                 if (emoji.equals(":D") || emoji.equals("):") || emoji.equals("|:")) {
                     for (ClientManagerServerSide client : Server.clientManagers) {
                         if (client.name.equals(name)) {
                             client.transmitter.sendMessage
-                                    ("message from " + this.client.name + " : " + emoji);
+                                    ("message from " + this.client.name + ": " + emoji);
                         }
                     }
                 }

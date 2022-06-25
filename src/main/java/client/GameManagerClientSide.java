@@ -8,6 +8,7 @@ import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class GameManagerClientSide {
+    private enum TimeStatus {PLAY, GET_STATUS}
     private final Client client;
     private final MessageTransmitter transmitter;
     private final ConsoleManager consoleManager;
@@ -15,11 +16,13 @@ public class GameManagerClientSide {
     private Thread messageSender;
     private String message = "";
     private boolean isHost = true;
+    private TimeStatus timeStatus;
 
     public GameManagerClientSide(Socket socket, Client client) {
         this.client = client;
         transmitter = new MessageTransmitter(socket);
         consoleManager = new ConsoleManager();
+        this.timeStatus = TimeStatus.GET_STATUS;
     }
 
     public void startGame() {
@@ -110,20 +113,32 @@ public class GameManagerClientSide {
     private void start() {
         do {
             message = transmitter.getMessage();
-            //ask to use ninja card first of each round
             askToUseNinja(message);
 
             messageGetter = new Thread(() -> {
                 message = transmitter.getMessage();
+                if (message.contains("Game started")) {
+                    this.timeStatus = TimeStatus.PLAY;
+                    consoleManager.sendMessage(message);
+                    consoleManager.sendMessage("To send message to another player use following command:" +
+                            "\nmessage to player: message" +
+                            "\nWrite player's name instead of player. You just can send :D or ): or |:");
+                }
+                else {
+                    if (message.contains("last played card")) this.timeStatus = TimeStatus.PLAY;
+                    consoleManager.sendMessage(message);
+                }
                 messageSender.interrupt();
-                consoleManager.sendMessage(message);
             });
 
             messageSender = new Thread(() -> {
-                message = consoleManager.getMessage();
-                if (isValidNumber(message)) {
-                    messageGetter.interrupt();
-                    transmitter.sendMessage(message);
+                if (timeStatus == TimeStatus.PLAY) {
+                    message = consoleManager.getMessage();
+                    if (isValidNumber(message)) {
+                        this.timeStatus = TimeStatus.GET_STATUS;
+                        messageGetter.interrupt();
+                        transmitter.sendMessage(message);
+                    }
                 }
             });
 
@@ -163,7 +178,16 @@ public class GameManagerClientSide {
     }
 
     private boolean isValidNumber(String message) {
-        if (message.contains("message")) return true;
+        if (message.contains("message")) {
+            try {
+                String emoji = message.split(" ")[3];
+                if (emoji.equals(":D") || emoji.equals("):") || emoji.equals("|:")) {
+                    return true;
+                }
+            } catch (Exception e) {
+                return false;
+            }
+        }
         int n;
         try {
             n = Integer.parseInt(message);
