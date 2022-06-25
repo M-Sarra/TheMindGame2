@@ -47,12 +47,9 @@ public class ClientManagerServerSide extends Player implements Runnable {
         return AuthToken;
     }
 
-    public boolean isUsingNinjaCard() {
-        return usingNinjaCard;
-    }
-
     public void setUsingNinjaCard(boolean useNinjaCard) {
         this.usingNinjaCard = useNinjaCard;
+        Server.gameController.GetGameByName(this.gameName).setNinjaResult(this.AuthToken, useNinjaCard);
     }
 
     protected void setGame(String game) {
@@ -149,7 +146,6 @@ public class ClientManagerServerSide extends Player implements Runnable {
         }
     }
 
-    //TODO : Call this method to get cardNumber from client
     public void play() {
         String message = "";
         int time = 0;
@@ -176,15 +172,10 @@ public class ClientManagerServerSide extends Player implements Runnable {
         }
     }
 
-    //TODO
-    public void sendGameStatus(String playerName, int lastCard) {
-        String message = "Game status:\n";
-        message += "heart card number: " +
-                Server.gameController.GetGameByName(this.gameName).getHeartNumber() + "\n";
+    public void sendHand() {
+        String message = "";
         message += "your hand: " + this.hand.toString();
-        message += "last played card: " + lastCard + " by player" + playerName;
         transmitter.sendMessage(message);
-        if (this.status != GameStatus.GameOver) decideToUseNinja();
     }
 
     @Override
@@ -201,7 +192,6 @@ public class ClientManagerServerSide extends Player implements Runnable {
 
     @Override
     public void NotifyPlaysCard(String player, Integer card) {
-        //send last played card to client
         if (this.hand.contains(card))
             hand.remove(card);
         if (card > Collections.min(this.hand)) {
@@ -211,16 +201,23 @@ public class ClientManagerServerSide extends Player implements Runnable {
             }
             this.hand.removeAll(removedCards);
         }
-        sendGameStatus(player, card);
+        String message = "player " + player + " played with card " + card
+                + "\nlast played card: " + card;
+        transmitter.sendMessage(message);
+        sendHand();
     }
 
     @Override
     public void NotifyNinjaPropose(String player) {
-        //Todo: برای اطلاع رسانی نینجاست
+        decideToUseNinja();
     }
+
     @Override
     public void NotifyNinjaAgreement() {
-        //Todo: برای اطلاع رسانی نینجاست
+        int ninjaCards = Server.gameController.GetGameByName(this.gameName).GetNinjaCards();
+        String message = "1 ninja card used." +
+                "\nninja card number: " + ninjaCards;
+        transmitter.sendMessage(message);
     }
 
     @Override

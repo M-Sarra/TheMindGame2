@@ -265,4 +265,12 @@ public class TheMindGame {
     {
         return this.ninjaCards;
     }
+
+    //TODO : set using ninja card result
+    public void setNinjaResult(String token, boolean result) {
+        for (PlayerInfo player : this.players) {
+            if (player.Token.equals(token))
+                player.ProposesNinjaCard = result;
+        }
+    }
 }
