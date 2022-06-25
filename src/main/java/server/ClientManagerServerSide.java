@@ -28,7 +28,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
 
     public ClientManagerServerSide(Socket socket) {
         this.socket = socket;
-        transmitter = new MessageTransmitter(socket);
+        transmitter = new MessageTransmitter(socket, this);
         this.AuthToken = setAuthToken();
         hand = new ArrayList<>();
         status = GameStatus.NotStarted;
@@ -124,8 +124,8 @@ public class ClientManagerServerSide extends Player implements Runnable {
     }
 
     //TODO : Call this method to ask client to use ninja card
-    public void decideToUseNinja(boolean haveCard) {
-        if (!haveCard) {
+    public void decideToUseNinja() {
+        if (this.hand.isEmpty()) {
             transmitter.sendMessage("false");
             setUsingNinjaCard(false);
         }
@@ -168,14 +168,14 @@ public class ClientManagerServerSide extends Player implements Runnable {
     }
 
     //TODO
-    public void sendGameStatus() {
-        String message = "";
-        if (this.heartMissed) {
-            message += "1 heart missed.";
-        }
-        message += Server.gameController.GetGameByName(this.gameName).getHeartNumber() + "\n";
-
+    public void sendGameStatus(String playerName, int lastCard) {
+        String message = "Game status:\n";
+        message += "heart card number: " +
+                Server.gameController.GetGameByName(this.gameName).getHeartNumber() + "\n";
+        message += "your hand: " + this.hand.toString();
+        message += "last played card: " + lastCard + " by player" + playerName;
         transmitter.sendMessage(message);
+        if (this.status != GameStatus.GameOver) decideToUseNinja();
     }
 
     @Override
@@ -202,6 +202,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
             }
             this.hand.removeAll(removedCards);
         }
+        sendGameStatus(player, card);
     }
 
     @Override
@@ -216,6 +217,8 @@ public class ClientManagerServerSide extends Player implements Runnable {
     @Override
     public void NotifyHeartMissed() {
         this.heartMissed = true;
+        transmitter.sendMessage("1 heart missed. Heart card number: " +
+                Server.gameController.GetGameByName(this.gameName).getHeartNumber());
     }
 
     @Override
@@ -233,8 +236,10 @@ public class ClientManagerServerSide extends Player implements Runnable {
 
         private PrintWriter out;
         private Scanner in;
+        private final ClientManagerServerSide client;
 
-        private MessageTransmitter(Socket socket) {
+        private MessageTransmitter(Socket socket, ClientManagerServerSide client) {
+            this.client = client;
             try {
                 out = new PrintWriter(socket.getOutputStream());
                 in = new Scanner(socket.getInputStream());
@@ -263,7 +268,8 @@ public class ClientManagerServerSide extends Player implements Runnable {
                 if (emoji.equals(":D") || emoji.equals("):") || emoji.equals("|:")) {
                     for (ClientManagerServerSide client : Server.clientManagers) {
                         if (client.name.equals(name)) {
-                            client.transmitter.sendMessage("message from " + name + " : " + emoji);
+                            client.transmitter.sendMessage
+                                    ("message from " + this.client.name + " : " + emoji);
                         }
                     }
                 }
