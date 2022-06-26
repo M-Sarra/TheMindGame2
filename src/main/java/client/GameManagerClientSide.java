@@ -8,7 +8,7 @@ import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class GameManagerClientSide {
-    private enum TimeStatus {PLAY, GET_STATUS}
+    private enum TimeStatus {PLAY, GET_STATUS, END}
     private final Client client;
     private final MessageTransmitter transmitter;
     private final ConsoleManager consoleManager;
@@ -76,10 +76,10 @@ public class GameManagerClientSide {
     }
 
     private void getBotNumber() {
-        consoleManager.sendMessage("Enter the number of players (2 - 12):");
+        consoleManager.sendMessage("Enter the number of players (2 - 8):");
         try {
             int playerNumber = Integer.parseInt(consoleManager.getMessage());
-            if (playerNumber < 2 || playerNumber > 12) getBotNumber();
+            if (playerNumber < 2 || playerNumber > 8) getBotNumber();
             client.setPlayerNumber(playerNumber);
             transmitter.sendMessage("playerNumber: " + String.valueOf(client.getPlayerNumber()));
         } catch (Exception e) {
@@ -111,41 +111,41 @@ public class GameManagerClientSide {
     }
 
     private void start() {
-        do {
-            message = transmitter.getMessage();
+        message = transmitter.getMessage();
+        if (message.contains("Game started")) {
+            this.timeStatus = TimeStatus.PLAY;
+            consoleManager.sendMessage(message);
+            consoleManager.sendMessage("To send message to another player use following command:" +
+                    "\nmessage to player: message" +
+                    "\nWrite player's name instead of player. You just can send :D or ): or |:");
+        }
 
-            messageGetter = new Thread(() -> {
+        messageGetter = new Thread(() -> {
+            while (timeStatus != TimeStatus.END) {
                 message = transmitter.getMessage();
-                if (message.contains("Game started")) {
-                    this.timeStatus = TimeStatus.PLAY;
-                    consoleManager.sendMessage(message);
-                    consoleManager.sendMessage("To send message to another player use following command:" +
-                            "\nmessage to player: message" +
-                            "\nWrite player's name instead of player. You just can send :D or ): or |:");
-                }
+                if (message.contains("useNinjaCard")) askToUseNinja(message);
                 else {
-                    if (message.contains("last played card")) this.timeStatus = TimeStatus.PLAY;
-                    if (message.contains("useNinjaCard")) askToUseNinja(message);
                     consoleManager.sendMessage(message);
+                    if (message.contains("last played card")) this.timeStatus = TimeStatus.PLAY;
+                    if (message.contains("Game finished")) this.timeStatus = TimeStatus.END;
                 }
-                messageSender.interrupt();
-            });
+            }
+        });
 
-            messageSender = new Thread(() -> {
-                if (timeStatus == TimeStatus.PLAY) {
-                    message = consoleManager.getMessage();
-                    if (isValidMessage(message)) {
+        messageSender = new Thread(() -> {
+            while (timeStatus != TimeStatus.END) {
+                message = consoleManager.getMessage();
+                if (isValidMessage(message)) {
+                    if (!message.contains("message")) {
                         this.timeStatus = TimeStatus.GET_STATUS;
-                        messageGetter.interrupt();
-                        transmitter.sendMessage(message);
                     }
+                    transmitter.sendMessage(message);
                 }
-            });
+            }
+        });
 
-            messageGetter.start();
-            messageSender.start();
-
-        } while (message.contains("Game finished"));
+        messageGetter.start();
+        messageSender.start();
     }
 
     private void askToUseNinja(String message) {
@@ -186,15 +186,18 @@ public class GameManagerClientSide {
                 return false;
             }
         }
-        int n;
-        try {
-            n = Integer.parseInt(message);
-            this.message = "cardNumber: " + n;
-        } catch (NumberFormatException e) {
-            consoleManager.sendMessage("Invalid input!");
-            return false;
+        if (timeStatus == TimeStatus.PLAY) {
+            int n;
+            try {
+                n = Integer.parseInt(message);
+                this.message = "cardNumber: " + n;
+            } catch (NumberFormatException e) {
+                consoleManager.sendMessage("Invalid input!");
+                return false;
+            }
+            return n > 0 && n < 100;
         }
-        return n > 0 && n < 100;
+        return false;
     }
 
 }
