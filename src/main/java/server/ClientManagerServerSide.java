@@ -23,6 +23,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
     private String gameName;
     private List<Integer> hand;
     private GameStatus status;
+    private int level;
 
     public ClientManagerServerSide(Socket socket) {
         this.socket = socket;
@@ -30,6 +31,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
         this.AuthToken = setAuthToken();
         hand = new ArrayList<>();
         status = GameStatus.NotStarted;
+        this.level = 0;
     }
 
     private String setAuthToken() {
@@ -173,8 +175,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
     }
 
     public void sendHand() {
-        String message = "";
-        message += "your hand: " + this.hand.toString();
+        String message = "Your hand: " + this.hand.toString();
         transmitter.sendMessage(message);
     }
 
@@ -236,8 +237,9 @@ public class ClientManagerServerSide extends Player implements Runnable {
 
     @Override
     public void GiveCard(Integer card) {
-        //send client's cards duo to this method
+        if (hand.isEmpty()) this.level++;
         hand.add(card);
+        if (hand.size() == this.level) sendHand();
     }
 
     class MessageTransmitter {
