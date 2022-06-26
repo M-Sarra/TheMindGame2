@@ -18,10 +18,13 @@ public class TheMindGame {
     private int ninjaCards;
     private Integer lastPlayedCard;
     private SecureRandom random;
+    private  PlayerInfo host;
+    public int capacity;
 
-    public TheMindGame(String name,GameController controller)
+    public TheMindGame(String name,GameController controller,PlayerInfo host,int capacity)
     {
-        //برای تست کردن نوشتیم.
+        this.host = host;
+        this.capacity = capacity;
         this.Name = name;
         this.controller = controller;
         this.heartCards = 0;
@@ -162,9 +165,16 @@ public class TheMindGame {
         inform.start();
     }
 
-    public void AddPlayer(PlayerInfo player) {
+    public String AddPlayer(PlayerInfo player) {
+        if(this.players.stream().count() >= this.capacity)
+            return "Game is full";
+        for (PlayerInfo info:this.players) {
+            if(info.Token.compareTo(player.Token)== 0)
+                return "Duplicate Player";
+        }
         this.players.add(player);
         this.observers.add(player.player);
+        return "Success";
     }
 
     public  String ProposeNinja(String token)
@@ -266,6 +276,11 @@ public class TheMindGame {
         return this.ninjaCards;
     }
 
+    public int GetCountOfPlayers() {
+        return (int)this.players.stream().count();
+    }
+
+
     //TODO : set using ninja card result
     public void setNinjaResult(String token, boolean result) {
         for (PlayerInfo player : this.players) {
@@ -273,4 +288,5 @@ public class TheMindGame {
                 player.ProposesNinjaCard = result;
         }
     }
+
 }

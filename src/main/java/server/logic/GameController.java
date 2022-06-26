@@ -13,9 +13,11 @@ public class GameController extends GameObserver implements IGameController {
     private TheMindGameUI ui;
     private  List<PlayerInfo> players;
     private SecureRandom random;
+    private int lastBotIndex;
 
     public GameController(TheMindGameUI ui)
     {
+        this.lastBotIndex = 0;
         this.ui = ui;
         this.random = new SecureRandom();// SecureRandom.getInstanceStrong();
         this.players = new ArrayList<PlayerInfo>();
@@ -41,13 +43,18 @@ public class GameController extends GameObserver implements IGameController {
     }
 
     @Override
-    public boolean CreateNewGame(String name) {
-        TheMindGame game = GetGameByName(name);
-        if (game != null) return false;
-        game = new TheMindGame(name,this);
+    public String CreateNewGame(String hostToken, String gameName,int capacity) {
+        TheMindGame game = GetGameByName(gameName);
+        if (game != null) return "Invalid Name";
+        PlayerInfo host = this.GetPlayerByToken(hostToken);
+        if(host == null)
+            return "Invalid Host";
+        if(capacity < 2 || capacity >6)
+            return "Invalid Capacity";
+        game = new TheMindGame(gameName,this,host,capacity);
         this.games.add(game);
         game.AddObserver(this);
-        return true;
+        return "Success";
     }
 
     public TheMindGame GetGameByName(String name) {
@@ -66,20 +73,20 @@ public class GameController extends GameObserver implements IGameController {
         return gameNames;
     }
 
-    @Override
-    public String AddBot(String token, String name,String gameName) {
+
+     String AddBot1(String token, String name,String gameName) {
         TheMindGame game = this.GetGameByName(gameName);
         if(game == null)
             return "Invalid game.";
         BotPlayer bot = new BotPlayer(name);
-        String botToken =  Join(bot,gameName);
+
+        String botToken =  Join1(bot,gameName);
         bot.Join(botToken,game);
         return "Success";
     }
-    //برای اتصال به بازی باید یک Player رو به این متد بدیم
-    //وقتی که کلاینت مون همون بازیکن هست باید اینجا ClientManager رو بهش بدیم
+    //Todo: این دیگه قدیمی شد. از اون یکی استفاده کنیم.
     @Override
-    public String Join( Player observer,String gameName)
+    public String Join1( Player observer,String gameName)
     {
         TheMindGame game = this.GetGameByName(gameName);
         if(game == null)
@@ -93,7 +100,32 @@ public class GameController extends GameObserver implements IGameController {
         String token = GetUnusedToken();
         player = new PlayerInfo(token,observer);
         this.players.add(player);
-        game.AddPlayer(player);
+         game.AddPlayer(player);
+        return token;
+    }
+    @Override
+    public String Join( String token,String gameName)
+    {
+        TheMindGame game = this.GetGameByName(gameName);
+        if(game == null)
+            return "Invalid game";
+        GameStatus status = game.getStatus();
+        if(status != GameStatus.NotStarted)
+            return "Invalid connecting time";
+        PlayerInfo player = GetPlayerByToken(token);
+        if(player == null)
+            return "Invalid token";
+        return game.AddPlayer(player);
+    }
+    @Override
+    public String Register(Player observer)
+    {
+        PlayerInfo player = GetPlayerByName(observer.GetName());
+        if(player != null)
+            return "duplicative name";
+        String token = GetUnusedToken();
+        player = new PlayerInfo(token,observer);
+        this.players.add(player);
         return token;
     }
 
@@ -112,11 +144,21 @@ public class GameController extends GameObserver implements IGameController {
     }
 
     //Todo: سارا
-    public void StartGame(String token,  String gameName) {
+    @Override
+    public String StartGame(String token,  String gameName) {
         TheMindGame game = this.GetGameByName(gameName);
         if(game == null)
-            return;
+            return "Invalid game";
+        GameStatus status = game.getStatus();
+        if(status != GameStatus.NotStarted && status != GameStatus.GameOver)
+            return "Invalid time to start";
+        int count = game.capacity- game.GetCountOfPlayers();
+        for (int i = 0 ; i < count;i++) {
+            this.lastBotIndex++;
+            this.AddBot1(token, "Bot" + lastBotIndex, gameName);
+        }
         game.Start();
+        return "Success";
     }
 
     @Override
