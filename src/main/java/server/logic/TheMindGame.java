@@ -279,4 +279,14 @@ public class TheMindGame {
     public int GetCountOfPlayers() {
         return (int)this.players.stream().count();
     }
+
+
+    //TODO : set using ninja card result
+    public void setNinjaResult(String token, boolean result) {
+        for (PlayerInfo player : this.players) {
+            if (player.Token.equals(token))
+                player.ProposesNinjaCard = result;
+        }
+    }
+
 }
