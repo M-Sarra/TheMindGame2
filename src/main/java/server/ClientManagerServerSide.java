@@ -65,7 +65,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
         getNameAndBotNo();
         if (isHost) {
             this.setGame(String.valueOf(Server.gameController.GetGames().size() + 1));
-            Server.gameController.CreateNewGame(this.AuthToken, this.gameName,5);
+            Server.gameController.CreateNewGame(this.AuthToken, this.gameName, this.playerNumber);
         }
         transmitter.sendMessage("AuthToken: " + AuthToken);
         addPlayerToGame();
@@ -110,7 +110,6 @@ public class ClientManagerServerSide extends Player implements Runnable {
     }
 
     private void addPlayerToGame() {
-        //Todo: جایگزین بشه.
         Server.gameController.Join1(this, this.gameName);
     }
 
