@@ -20,11 +20,9 @@ public class ClientManagerServerSide extends Player implements Runnable {
     private int playerNumber;
     private final MessageTransmitter transmitter;
     private boolean decisionTime = false;
-    private boolean usingNinjaCard;
     private String gameName;
     private List<Integer> hand;
     private GameStatus status;
-    private boolean heartMissed = false;
 
     public ClientManagerServerSide(Socket socket) {
         this.socket = socket;
@@ -47,12 +45,8 @@ public class ClientManagerServerSide extends Player implements Runnable {
         return AuthToken;
     }
 
-    public boolean isUsingNinjaCard() {
-        return usingNinjaCard;
-    }
-
     public void setUsingNinjaCard(boolean useNinjaCard) {
-        this.usingNinjaCard = useNinjaCard;
+        Server.gameController.GetGameByName(this.gameName).setNinjaResult(this.AuthToken, useNinjaCard);
     }
 
     protected void setGame(String game) {
@@ -71,7 +65,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
             this.setGame(String.valueOf(Server.gameController.GetGames().size() + 1));
             Server.gameController.CreateNewGame(this.AuthToken, this.gameName,5);
         }
-        transmitter.sendMessage(AuthToken);
+        transmitter.sendMessage("AuthToken: " + AuthToken);
         addPlayerToGame();
         getStartOrder();
         play();
@@ -79,26 +73,34 @@ public class ClientManagerServerSide extends Player implements Runnable {
 
     protected boolean decideToJoin() {
         decisionTime = true;
-        transmitter.sendMessage("true");
+        transmitter.sendMessage("decisionTime: true");
         String decision = transmitter.getMessage();
         boolean answer = false;
         try {
-            answer = Boolean.parseBoolean(decision);
-        } catch (Exception ignored) {
-        }
+            if (decision.contains("joinToGame"))
+                answer = Boolean.parseBoolean(decision.split(" ")[1]);
+        } catch (Exception ignored) {}
         this.isHost = !answer;
         return answer;
     }
 
-    //TODO : set game's player number
     private void getNameAndBotNo() {
         if (!decisionTime) {
-            transmitter.sendMessage("false");
+            transmitter.sendMessage("decisionTime: false");
         }
-        name = transmitter.getMessage();
+        try {
+            String message = transmitter.getMessage();
+            if (message.contains("name"))
+                name = message.split(" ")[1];
+        } catch (Exception e) {
+            SecureRandom random = new SecureRandom();
+            name = String.valueOf(random.nextInt());
+        }
         if (isHost) {
             try {
-                this.playerNumber = Integer.parseInt(transmitter.getMessage());
+                String message = transmitter.getMessage();
+                if (message.contains("playerNumber"))
+                    this.playerNumber = Integer.parseInt(message.split(" ")[1]);
             } catch (NumberFormatException e) {
                 this.playerNumber = 4;
             }
@@ -110,7 +112,6 @@ public class ClientManagerServerSide extends Player implements Runnable {
         Server.gameController.Join1(this, this.gameName);
     }
 
-    //TODO : start game
     private void getStartOrder() {
         String token = this.AuthToken;
         String gameName = this.gameName;
@@ -124,39 +125,43 @@ public class ClientManagerServerSide extends Player implements Runnable {
         }
     }
 
-    //TODO : Call this method to ask client to use ninja card
     public void decideToUseNinja() {
         if (this.hand.isEmpty()) {
-            transmitter.sendMessage("false");
+            transmitter.sendMessage("useNinjaCard: false");
             setUsingNinjaCard(false);
         }
         else {
-            transmitter.sendMessage("true");
+            transmitter.sendMessage("useNinjaCard: true");
             try {
-                boolean useNinja = Boolean.parseBoolean(transmitter.getMessage());
-                setUsingNinjaCard(useNinja);
+                String message = transmitter.getMessage();
+                if (message.contains("useNinjaCard")) {
+                    boolean useNinja = Boolean.parseBoolean(message.split(" ")[1]);
+                    setUsingNinjaCard(useNinja);
+                }
             } catch (Exception e) {
                 setUsingNinjaCard(false);
             }
         }
     }
 
-    //TODO : Call this method to get cardNumber from client
     public void play() {
         String message = "";
         int time = 0;
         while (this.status != GameStatus.GameOver || this.status != GameStatus.Win) {
             if (this.status == GameStatus.NotStarted) continue;
             if (time == 0) {
-                transmitter.sendMessage
-                        (Server.gameController.GetGameByName(this.gameName).getPlayersName().toString());
+                message = "Game started\n" +
+                        "Game name: " + this.gameName +
+                        "Player's: " +
+                        Server.gameController.GetGameByName(this.gameName).getPlayersName().toString();
+                transmitter.sendMessage(message);
                 time++;
             }
             message = transmitter.getMessage();
             if (message.equals("Could not get message!!")) continue;
             if (message.contains("cardNumber")) {
                 try {
-                    int cardNumber = Integer.parseInt(message);
+                    int cardNumber = Integer.parseInt(message.split(" ")[1]);
                     if (!this.hand.contains(cardNumber) &&
                             Collections.min(this.hand) != cardNumber) return;
                     Server.gameController.GetGameByName(this.gameName).Play(this.AuthToken, cardNumber);
@@ -168,15 +173,10 @@ public class ClientManagerServerSide extends Player implements Runnable {
         }
     }
 
-    //TODO
-    public void sendGameStatus(String playerName, int lastCard) {
-        String message = "Game status:\n";
-        message += "heart card number: " +
-                Server.gameController.GetGameByName(this.gameName).getHeartNumber() + "\n";
+    public void sendHand() {
+        String message = "";
         message += "your hand: " + this.hand.toString();
-        message += "last played card: " + lastCard + " by player" + playerName;
         transmitter.sendMessage(message);
-        if (this.status != GameStatus.GameOver) decideToUseNinja();
     }
 
     @Override
@@ -188,12 +188,14 @@ public class ClientManagerServerSide extends Player implements Runnable {
             try {
                 this.socket.close();
             } catch (IOException ignored) {}
+            if (this.isHost) {
+                Server.gameController.GetGames().remove(this.gameName);
+            }
         }
     }
 
     @Override
     public void NotifyPlaysCard(String player, Integer card) {
-        //send last played card to client
         if (this.hand.contains(card))
             hand.remove(card);
         if (card > Collections.min(this.hand)) {
@@ -203,21 +205,27 @@ public class ClientManagerServerSide extends Player implements Runnable {
             }
             this.hand.removeAll(removedCards);
         }
-        sendGameStatus(player, card);
+        String message = "player " + player + " played with card " + card
+                + "\nlast played card: " + card;
+        transmitter.sendMessage(message);
+        sendHand();
     }
 
     @Override
     public void NotifyNinjaPropose(String player) {
-        //Todo: برای اطلاع رسانی نینجاست
+        decideToUseNinja();
     }
+
     @Override
     public void NotifyNinjaAgreement() {
-        //Todo: برای اطلاع رسانی نینجاست
+        int ninjaCards = Server.gameController.GetGameByName(this.gameName).GetNinjaCards();
+        String message = "1 ninja card used." +
+                "\nninja card number: " + ninjaCards;
+        transmitter.sendMessage(message);
     }
 
     @Override
     public void NotifyHeartMissed() {
-        this.heartMissed = true;
         transmitter.sendMessage("1 heart missed. Heart card number: " +
                 Server.gameController.GetGameByName(this.gameName).getHeartNumber());
     }
@@ -265,12 +273,12 @@ public class ClientManagerServerSide extends Player implements Runnable {
                 String name = message.split(" ")[2];
                 List<String> names =Server.gameController.GetGameByName(gameName).getPlayersName();
                 if (!names.contains(name)) return;
-                String emoji = message.split(" ")[4];
+                String emoji = message.split(" ")[3];
                 if (emoji.equals(":D") || emoji.equals("):") || emoji.equals("|:")) {
                     for (ClientManagerServerSide client : Server.clientManagers) {
                         if (client.name.equals(name)) {
                             client.transmitter.sendMessage
-                                    ("message from " + this.client.name + " : " + emoji);
+                                    ("message from " + this.client.name + ": " + emoji);
                         }
                     }
                 }

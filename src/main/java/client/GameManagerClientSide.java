@@ -3,8 +3,12 @@ package client;
 import client.UI.ConsoleManager;
 
 import java.net.Socket;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class GameManagerClientSide {
+    private enum TimeStatus {PLAY, GET_STATUS, END}
     private final Client client;
     private final MessageTransmitter transmitter;
     private final ConsoleManager consoleManager;
@@ -12,11 +16,13 @@ public class GameManagerClientSide {
     private Thread messageSender;
     private String message = "";
     private boolean isHost = true;
+    private TimeStatus timeStatus;
 
     public GameManagerClientSide(Socket socket, Client client) {
         this.client = client;
         transmitter = new MessageTransmitter(socket);
         consoleManager = new ConsoleManager();
+        this.timeStatus = TimeStatus.GET_STATUS;
     }
 
     public void startGame() {
@@ -36,19 +42,21 @@ public class GameManagerClientSide {
     private void setDecisionTime() {
         boolean decisionTime = false;
         try {
-            decisionTime = Boolean.parseBoolean(transmitter.getMessage());
+            String message = transmitter.getMessage();
+            if (message.contains("decisionTime"))
+                decisionTime = Boolean.parseBoolean(message.split(" ")[1]);
         } catch (Exception ignored) {}
         if (decisionTime) {
-            consoleManager.sendMessage("There is a 'notStarted' game. Do you want to join?\n" +
+            consoleManager.sendMessage("There is a 'not started' game. Do you want to join?\n" +
                     "type y or n.");
             String answer = consoleManager.getMessage();
             while (true) {
                 if (answer.equals("y") || answer.equals("Y")) {
-                    transmitter.sendMessage("true");
+                    transmitter.sendMessage("joinToGame: true");
                     isHost = false;
                     break;
                 } else if (answer.equals("n") || answer.equals("N")) {
-                    transmitter.sendMessage("false");
+                    transmitter.sendMessage("joinToGame: false");
                     break;
                 }
                 else {
@@ -59,33 +67,33 @@ public class GameManagerClientSide {
     }
 
     private void getNameAndBotNo() {
-        //send message duo to a better way
         consoleManager.sendMessage("Enter your name:");
         client.setName(consoleManager.getMessage());
-        transmitter.sendMessage(client.getName());
+        transmitter.sendMessage("name: " + client.getName());
         if (isHost) {
             getBotNumber();
         }
     }
 
     private void getBotNumber() {
-        consoleManager.sendMessage("Enter the number of players (2 - 12):");
+        consoleManager.sendMessage("Enter the number of players (2 - 8):");
         try {
             int playerNumber = Integer.parseInt(consoleManager.getMessage());
-            if (playerNumber < 2 || playerNumber > 12) getBotNumber();
+            if (playerNumber < 2 || playerNumber > 8) getBotNumber();
             client.setPlayerNumber(playerNumber);
-            transmitter.sendMessage(String.valueOf(client.getPlayerNumber()));
+            transmitter.sendMessage("playerNumber: " + String.valueOf(client.getPlayerNumber()));
         } catch (Exception e) {
             getBotNumber();
         }
     }
 
     private void getAuthToken() {
-        //check if message contains auth token
         String message = transmitter.getMessage();
         try {
-            client.setAuthToken(Integer.parseInt(message));
-            consoleManager.sendMessage("AuthToken: " + client.getAuthToken());
+            if (message.contains("AuthToken")) {
+                client.setAuthToken(message.split(" ")[1]);
+                consoleManager.sendMessage("AuthToken: " + client.getAuthToken());
+            }
         } catch (NumberFormatException ignored) {}
     }
 
@@ -103,50 +111,93 @@ public class GameManagerClientSide {
     }
 
     private void start() {
-        do {
-            message = transmitter.getMessage();
-            //ask to use ninja card first of each round
-            if (message.equals("true")) {
-                consoleManager.sendMessage("Do you want to use ninja card? type 'y' or 'n'.");
-                message = consoleManager.getMessage();
-                if (message.equals("y") || message.equals("Y")) {
-                    transmitter.sendMessage("true");
-                }
-                else transmitter.sendMessage("false");
-            }
+        message = transmitter.getMessage();
+        if (message.contains("Game started")) {
+            this.timeStatus = TimeStatus.PLAY;
+            consoleManager.sendMessage(message);
+            consoleManager.sendMessage("To send message to another player use following command:" +
+                    "\nmessage to player: message" +
+                    "\nWrite player's name instead of player. You just can send :D or ): or |:");
+        }
 
-            messageGetter = new Thread(() -> {
+        messageGetter = new Thread(() -> {
+            while (timeStatus != TimeStatus.END) {
                 message = transmitter.getMessage();
-                messageSender.interrupt();
-                //deserialize message
+                if (message.contains("useNinjaCard")) askToUseNinja(message);
+                else {
+                    consoleManager.sendMessage(message);
+                    if (message.contains("last played card")) this.timeStatus = TimeStatus.PLAY;
+                    if (message.contains("Game finished")) this.timeStatus = TimeStatus.END;
+                }
+            }
+        });
 
-                consoleManager.sendMessage(message);
-            });
-
-            messageSender = new Thread(() -> {
+        messageSender = new Thread(() -> {
+            while (timeStatus != TimeStatus.END) {
                 message = consoleManager.getMessage();
-                //message could be invalid yet
-                if (isValidNumber(message)) {
-                    messageGetter.interrupt();
+                if (isValidMessage(message)) {
+                    if (!message.contains("message")) {
+                        this.timeStatus = TimeStatus.GET_STATUS;
+                    }
                     transmitter.sendMessage(message);
                 }
-            });
+            }
+        });
 
-            messageGetter.start();
-            messageSender.start();
-
-        } while (message.contains("Game finished"));
+        messageGetter.start();
+        messageSender.start();
     }
 
-    private boolean isValidNumber(String message) {
-        int n;
+    private void askToUseNinja(String message) {
+        boolean answer = false;
         try {
-            n = Integer.parseInt(message);
-        } catch (NumberFormatException e) {
-            consoleManager.sendMessage("Invalid input!");
-            return false;
+            answer = Boolean.parseBoolean(message.split(" ")[1]);
+        } catch (Exception ignored) {}
+        if (answer) {
+            AtomicReference<String> answer1 = new AtomicReference<>("n");
+            consoleManager.sendMessage("Do you want to use ninja card? type 'y' or 'n'.");
+            Thread ninjaCard = new Thread(() -> {
+                String answer2 = consoleManager.getMessage();
+                answer1.set(answer2);
+            });
+            ninjaCard.start();
+            Timer timer = new Timer();
+            timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    ninjaCard.interrupt();
+                }
+            }, 7000);
+            if (answer1.equals("y") || answer1.equals("Y")) {
+                transmitter.sendMessage("useNinjaCard: true");
+            }
+            else transmitter.sendMessage("useNinjaCard: false");
         }
-        return n > 0 && n < 100;
+    }
+
+    private boolean isValidMessage(String message) {
+        if (message.contains("message")) {
+            try {
+                String emoji = message.split(" ")[3];
+                if (emoji.equals(":D") || emoji.equals("):") || emoji.equals("|:")) {
+                    return true;
+                }
+            } catch (Exception e) {
+                return false;
+            }
+        }
+        if (timeStatus == TimeStatus.PLAY) {
+            int n;
+            try {
+                n = Integer.parseInt(message);
+                this.message = "cardNumber: " + n;
+            } catch (NumberFormatException e) {
+                consoleManager.sendMessage("Invalid input!");
+                return false;
+            }
+            return n > 0 && n < 100;
+        }
+        return false;
     }
 
 }
