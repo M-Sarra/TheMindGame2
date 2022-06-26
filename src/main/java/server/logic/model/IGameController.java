@@ -14,22 +14,19 @@ import java.util.List;
 import java.util.Observer;
 
 public interface IGameController  {
-    public abstract String CreateNewGame(String hostToken, String gameName,int capacity);
+    String CreateNewGame(String hostToken, String gameName,int capacity);
 
-    public abstract TheMindGame GetGameByName(String name) ;
+    TheMindGame GetGameByName(String name) ;
 
-    public abstract List<String> GetGames();
+    List<String> GetGames();
 
     //public abstract String AddBot(String token, String name,String gameName);
 
-    public abstract String Join1( Player observer,String gameName);
-    public abstract String Join(String token,String gameName);
+     String Join(String token,String gameName);
     String Register(Player observer);
 
     public String StartGame(String token,  String gameName);
 
     public  boolean IsOpen() ;
-
-    public String joinAnExistingGame() ;
 
 }

@@ -74,7 +74,7 @@ public class GameController extends GameObserver implements IGameController {
     }
 
 
-     String AddBot1(String token, String name,String gameName) {
+     String AddBot(String token, String name,String gameName) {
         TheMindGame game = this.GetGameByName(gameName);
         if(game == null)
             return "Invalid game.";
@@ -85,7 +85,6 @@ public class GameController extends GameObserver implements IGameController {
         return "Success";
     }
     //Todo: این دیگه قدیمی شد. از اون یکی استفاده کنیم.
-    @Override
     public String Join1( Player observer,String gameName)
     {
         TheMindGame game = this.GetGameByName(gameName);
@@ -155,7 +154,7 @@ public class GameController extends GameObserver implements IGameController {
         int count = game.capacity- game.GetCountOfPlayers();
         for (int i = 0 ; i < count;i++) {
             this.lastBotIndex++;
-            this.AddBot1(token, "Bot" + lastBotIndex, gameName);
+            this.AddBot(token, "Bot" + lastBotIndex, gameName);
         }
         game.Start();
         return "Success";
@@ -205,6 +204,8 @@ public class GameController extends GameObserver implements IGameController {
     }
 
     //TODO : Return an existing game
+    //Todo: بجای این متد از متدهای زیر استفاده کن
+    //GetGames, GetGameByName, TheMindGame.getStatus
     public String joinAnExistingGame() {
         for (TheMindGame game : this.games) {
             if (game.getStatus() == GameStatus.NotStarted) {
