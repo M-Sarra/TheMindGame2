@@ -44,7 +44,10 @@ public class Client {
             GameManagerClientSide gameManager = new GameManagerClientSide(socket, this);
             gameManager.startGame();
         } catch (IOException e) {
-            e.printStackTrace();
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException ignored) {}
+            start();
         }
     }
 
