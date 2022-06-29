@@ -110,7 +110,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
     }
 
     private void addPlayerToGame() {
-        Server.gameController.Join1(this, this.gameName);
+        Server.gameController.Join(this.AuthToken, this.gameName);
     }
 
     private void getStartOrder() {
@@ -118,9 +118,10 @@ public class ClientManagerServerSide extends Player implements Runnable {
         String gameName = this.gameName;
         if (isHost) {
             String message = transmitter.getMessage();
-            if (message.equals("start")) {
+            if (!message.split(" ")[0].equals(this.AuthToken)) getStartOrder();
+            if (message.split(" ")[1].equals("start")) {
                 Thread thread = new Thread(() -> Server.gameController.StartGame(token, gameName));
-                thread.start();;
+                thread.start();
             }
             else getStartOrder();
         }
@@ -151,18 +152,22 @@ public class ClientManagerServerSide extends Player implements Runnable {
         while (this.status != GameStatus.GameOver || this.status != GameStatus.Win) {
             if (this.status == GameStatus.NotStarted) continue;
             if (time == 0) {
-                message = "Game started\n" +
-                        "Game name: " + this.gameName +
-                        "Player's: " +
+                message = "Game started" +
+                        "\nGame name: " + this.gameName +
+                        "\nlevel card: 1" +
+                        "\nheart cards: " + Server.gameController.GetGameByName(this.gameName).getHeartNumber() +
+                        "\nninja cards: 2" +
+                        "\nPlayer's: " +
                         Server.gameController.GetGameByName(this.gameName).getPlayersName().toString();
                 transmitter.sendMessage(message);
                 time++;
             }
             message = transmitter.getMessage();
             if (message.equals("Could not get message!!")) continue;
+            if (!message.split(" ")[0].equals(this.AuthToken)) continue;
             if (message.contains("cardNumber")) {
                 try {
-                    int cardNumber = Integer.parseInt(message.split(" ")[1]);
+                    int cardNumber = Integer.parseInt(message.split(" ")[2]);
                     if (!this.hand.contains(cardNumber) &&
                             Collections.min(this.hand) != cardNumber) return;
                     Server.gameController.GetGameByName(this.gameName).Play(this.AuthToken, cardNumber);
@@ -205,8 +210,11 @@ public class ClientManagerServerSide extends Player implements Runnable {
             }
             this.hand.removeAll(removedCards);
         }
-        String message = "player " + player + " played with card " + card
-                + "\nlast played card: " + card;
+        String message = "player " + player + " played with card " + card +
+                "\nlast played card: " + card +
+                "\nlevel card: " + this.level +
+                "\nheart cards: " + Server.gameController.GetGameByName(this.gameName).getHeartNumber() +
+                "\nninja cards: " + Server.gameController.GetGameByName(this.gameName).GetNinjaCards();
         transmitter.sendMessage(message);
         sendHand();
     }
@@ -271,10 +279,10 @@ public class ClientManagerServerSide extends Player implements Runnable {
 
         protected void sendMessageToOtherClient(String message) {
             try {
-                String name = message.split(" ")[2];
+                String name = message.split(" ")[3];
                 List<String> names =Server.gameController.GetGameByName(gameName).getPlayersName();
                 if (!names.contains(name)) return;
-                String emoji = message.split(" ")[3];
+                String emoji = message.split(" ")[4];
                 if (emoji.equals(":D") || emoji.equals("):") || emoji.equals("|:")) {
                     for (ClientManagerServerSide client : Server.clientManagers) {
                         if (client.name.equals(name)) {

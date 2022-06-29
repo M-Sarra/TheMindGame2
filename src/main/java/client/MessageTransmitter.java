@@ -8,6 +8,7 @@ import java.util.Scanner;
 public class MessageTransmitter {
     private final Scanner in;
     private final PrintWriter out;
+    private String AuthToken;
 
     public MessageTransmitter(Socket socket) {
         Scanner in1;
@@ -24,6 +25,10 @@ public class MessageTransmitter {
         out = out1;
     }
 
+    public void setAuthToken(String authToken) {
+        AuthToken = authToken;
+    }
+
     public String getMessage() {
         try {
             return in.nextLine();
@@ -37,6 +42,11 @@ public class MessageTransmitter {
             out.println(message);
             out.flush();
         } catch (Exception ignored){}
+    }
+
+    public void sendMessageByToken(String message) {
+        String newMessage = this.AuthToken + " " + message;
+        sendMessage(newMessage);
     }
 
 

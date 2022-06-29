@@ -102,7 +102,7 @@ public class GameManagerClientSide {
             consoleManager.sendMessage("Whenever you want to start the game, type 'start'.");
             String message = consoleManager.getMessage();
             if (message.equals("start")) {
-                transmitter.sendMessage("start");
+                transmitter.sendMessageByToken("start");
                 start();
             } else {
                 orderToStart();
@@ -139,7 +139,7 @@ public class GameManagerClientSide {
                     if (!message.contains("message")) {
                         this.timeStatus = TimeStatus.GET_STATUS;
                     }
-                    transmitter.sendMessage(message);
+                    transmitter.sendMessageByToken(message);
                 }
             }
         });
