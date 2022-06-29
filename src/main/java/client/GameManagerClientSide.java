@@ -12,8 +12,6 @@ public class GameManagerClientSide {
     private final Client client;
     private final MessageTransmitter transmitter;
     private final ConsoleManager consoleManager;
-    private Thread messageGetter;
-    private Thread messageSender;
     private String message = "";
     private boolean isHost = true;
     private TimeStatus timeStatus;
@@ -121,7 +119,7 @@ public class GameManagerClientSide {
                     "\nWrite player's name instead of player. You just can send :D or ): or |:");
         }
 
-        messageGetter = new Thread(() -> {
+        Thread messageGetter = new Thread(() -> {
             int time = 0;
             while (timeStatus != TimeStatus.END) {
                 message = transmitter.getMessage();
@@ -129,11 +127,12 @@ public class GameManagerClientSide {
                     time++;
                     if (time > 10) {
                         consoleManager.sendMessage("The connection to the server was lost!");
-                        return;
+                        System.exit(0);
                     }
                     try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException ignored) {}
+                        Thread.sleep(250);
+                    } catch (InterruptedException ignored) {
+                    }
                     continue;
                 }
                 if (message.contains("useNinjaCard")) askToUseNinja(message);
@@ -145,7 +144,7 @@ public class GameManagerClientSide {
             }
         });
 
-        messageSender = new Thread(() -> {
+        Thread messageSender = new Thread(() -> {
             while (timeStatus != TimeStatus.END) {
                 message = consoleManager.getMessage();
                 if (isValidMessage(message)) {
