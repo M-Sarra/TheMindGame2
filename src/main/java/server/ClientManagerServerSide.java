@@ -36,10 +36,6 @@ public class ClientManagerServerSide extends Player implements Runnable {
         this.level = 0;
     }
 
-    public String getAuthToken() {
-        return AuthToken;
-    }
-
     public void setUsingNinjaCard(boolean useNinjaCard) {
         Server.gameController.GetGameByName(this.gameName).setNinjaResult(this.AuthToken, useNinjaCard);
     }
@@ -69,7 +65,6 @@ public class ClientManagerServerSide extends Player implements Runnable {
         }
         transmitter.sendMessage("AuthToken: " + AuthToken);
         getStartOrder();
-        play();
     }
 
     protected boolean decideToJoin() {
@@ -133,44 +128,22 @@ public class ClientManagerServerSide extends Player implements Runnable {
         }
     }
 
-    public void decideToUseNinja() {
-        if (this.hand.isEmpty()) {
-            transmitter.sendMessage("useNinjaCard: false");
-            setUsingNinjaCard(false);
-        }
-        else {
-            transmitter.sendMessage("useNinjaCard: true");
-            try {
-                String message = transmitter.getMessage();
-                if (message.contains("useNinjaCard")) {
-                    boolean useNinja = Boolean.parseBoolean(message.split(" ")[1]);
-                    setUsingNinjaCard(useNinja);
-                }
-            } catch (Exception e) {
-                setUsingNinjaCard(false);
-            }
-        }
-    }
-
     public void play() {
-        String message = "";
-        int time = 0;
+        String message;
+        message = "Game started" +
+                "\nGame name: " + this.gameName +
+                "\nlevel card: 1" +
+                "\nheart cards: " + Server.gameController.GetGameByName(this.gameName).getHeartNumber() +
+                "\nninja cards: 2" +
+                "\nPlayer's: " +
+                Server.gameController.GetGameByName(this.gameName).getPlayersName().toString();
+        transmitter.sendMessage(message);
+
         while (this.status != GameStatus.GameOver || this.status != GameStatus.Win) {
-            if (this.status == GameStatus.NotStarted) continue;
-            if (time == 0) {
-                message = "Game started" +
-                        "\nGame name: " + this.gameName +
-                        "\nlevel card: 1" +
-                        "\nheart cards: " + Server.gameController.GetGameByName(this.gameName).getHeartNumber() +
-                        "\nninja cards: 2" +
-                        "\nPlayer's: " +
-                        Server.gameController.GetGameByName(this.gameName).getPlayersName().toString();
-                transmitter.sendMessage(message);
-                time++;
-            }
             message = transmitter.getMessage();
             if (message.equals("Could not get message!!")) continue;
             if (!message.split(" ")[0].equals(this.AuthToken)) continue;
+            if (message.split(" ")[1].equals("0")) useNinjaCard();
             if (message.contains("cardNumber")) {
                 try {
                     int cardNumber = Integer.parseInt(message.split(" ")[2]);
@@ -190,8 +163,16 @@ public class ClientManagerServerSide extends Player implements Runnable {
         transmitter.sendMessage(message);
     }
 
+    private void useNinjaCard() {
+        theMindGame.setNinjaResult(this.AuthToken, true);
+    }
+
     @Override
     public void StatusChanged(GameStatus status) {
+        if (this.status == GameStatus.NotStarted) {
+            Thread play = new Thread(this::play);
+            play.start();
+        }
         this.status = status;
         if (status == GameStatus.GameOver ||
         status == GameStatus.Win) {
@@ -226,7 +207,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
 
     @Override
     public void NotifyNinjaPropose(String player) {
-        decideToUseNinja();
+        //TODO
     }
 
     @Override

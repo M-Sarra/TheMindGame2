@@ -24,15 +24,16 @@ public class GameManagerClientSide {
     }
 
     public void startGame() {
-        introduceGame();
+        theMindGame();
         getName();
         setDecisionTime();
         getPlayerNumber();
         getAuthToken();
+        introduceGame();
         orderToStart();
     }
 
-    private void introduceGame() {
+    private void theMindGame() {
         consoleManager.sendMessage("The Mind\n" +
                 "The human mind is amazingly powerful. " +
                 "It can do things for real that sometimes feel like magic.\n");
@@ -96,6 +97,14 @@ public class GameManagerClientSide {
         } catch (NumberFormatException ignored) {}
     }
 
+    private void introduceGame() {
+        consoleManager.sendMessage("After the game starts, the names of the players will be sent to you." +
+                "\nTo send message to another player use following command:" +
+                "\nmessage to player: message" +
+                "\nWrite player's name instead of player. You just can send :D or ): or |:" +
+                "\nGame has 2 ninja cards at first. Enter 0 whenever you want to use the ninja card");
+    }
+
     private void orderToStart() {
         if (isHost) {
             consoleManager.sendMessage("Whenever you want to start the game, type 'start'.");
@@ -114,9 +123,6 @@ public class GameManagerClientSide {
         if (message.contains("Game started")) {
             this.timeStatus = TimeStatus.PLAY;
             consoleManager.sendMessage(message);
-            consoleManager.sendMessage("To send message to another player use following command:" +
-                    "\nmessage to player: message" +
-                    "\nWrite player's name instead of player. You just can send :D or ): or |:");
         }
 
         Thread messageGetter = new Thread(() -> {
@@ -135,12 +141,10 @@ public class GameManagerClientSide {
                     }
                     continue;
                 }
-                if (message.contains("useNinjaCard")) askToUseNinja(message);
-                else {
-                    consoleManager.sendMessage(message);
-                    if (message.contains("last played card")) this.timeStatus = TimeStatus.PLAY;
-                    if (message.contains("Game finished")) this.timeStatus = TimeStatus.END;
-                }
+                consoleManager.sendMessage(message);
+                if (message.contains("last played card")) this.timeStatus = TimeStatus.PLAY;
+                if (message.contains("Game finished")) this.timeStatus = TimeStatus.END;
+
             }
         });
 
@@ -160,33 +164,6 @@ public class GameManagerClientSide {
         messageSender.start();
     }
 
-    private void askToUseNinja(String message) {
-        boolean answer = false;
-        try {
-            answer = Boolean.parseBoolean(message.split(" ")[1]);
-        } catch (Exception ignored) {}
-        if (answer) {
-            AtomicReference<String> answer1 = new AtomicReference<>("n");
-            consoleManager.sendMessage("Do you want to use ninja card? type 'y' or 'n'.");
-            Thread ninjaCard = new Thread(() -> {
-                String answer2 = consoleManager.getMessage();
-                answer1.set(answer2);
-            });
-            ninjaCard.start();
-            Timer timer = new Timer();
-            timer.schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    ninjaCard.interrupt();
-                }
-            }, 7000);
-            if (answer1.equals("y") || answer1.equals("Y")) {
-                transmitter.sendMessage("useNinjaCard: true");
-            }
-            else transmitter.sendMessage("useNinjaCard: false");
-        }
-    }
-
     private boolean isValidMessage(String message) {
         if (message.contains("message")) {
             try {
@@ -202,12 +179,12 @@ public class GameManagerClientSide {
             int n;
             try {
                 n = Integer.parseInt(message);
-                this.message = "cardNumber: " + n;
+                if (n != 0) this.message = "cardNumber: " + n;
             } catch (NumberFormatException e) {
                 consoleManager.sendMessage("Invalid input!");
                 return false;
             }
-            return n > 0 && n < 100;
+            return n >= 0 && n < 100;
         }
         return false;
     }
