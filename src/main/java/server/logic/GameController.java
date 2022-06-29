@@ -215,4 +215,34 @@ public class GameController extends GameObserver implements IGameController {
         return "Game not found!";
     }
 
+    public  List<String> GetJoinableGames()
+    {
+        List<String> names = new ArrayList();
+        for (TheMindGame game : this.games) {
+            if (game.IsJoinable()) {
+                names.add( game.Name);
+            }
+        }
+        return names;
+    }
+
+    public String JoinToAvailableGame(String token)
+    {
+        for (TheMindGame game : this.games) {
+            if (game.IsJoinable()) {
+                 String result =  this.Join(token,game.Name);
+                 if(result.equals("Success"))
+                     return game.Name;
+                 return result;
+            }
+        }
+        PlayerInfo player = this.GetPlayerByToken(token);
+        if(player == null)
+            return "Invalid Player";
+        String gameName = player.Name+"Game";
+        String result = CreateNewGame(token,gameName,4);
+        if(result.equals("Success"))
+            return gameName;
+        return result;
+    }
 }

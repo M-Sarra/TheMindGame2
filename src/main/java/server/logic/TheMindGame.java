@@ -289,4 +289,11 @@ public class TheMindGame {
         }
     }
 
+    public boolean IsJoinable() {
+        if(status != GameStatus.NotStarted)
+            return false;
+        if(this.players.stream().count() >= this.capacity)
+            return false;
+        return true;
+    }
 }

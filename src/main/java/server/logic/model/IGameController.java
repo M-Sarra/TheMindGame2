@@ -19,14 +19,17 @@ public interface IGameController  {
     TheMindGame GetGameByName(String name) ;
 
     List<String> GetGames();
+    List<String> GetJoinableGames();
+    String JoinToAvailableGame(String token);
+
 
     //public abstract String AddBot(String token, String name,String gameName);
 
-     String Join(String token,String gameName);
+    String Join(String token,String gameName);
     String Register(Player observer);
 
-    public String StartGame(String token,  String gameName);
+    String StartGame(String token,  String gameName);
 
-    public  boolean IsOpen() ;
+    boolean IsOpen() ;
 
 }
