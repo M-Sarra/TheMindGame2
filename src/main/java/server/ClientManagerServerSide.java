@@ -70,6 +70,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
             addPlayerToGame();
         }
         transmitter.sendMessage("AuthToken: " + AuthToken);
+        register();
         getStartOrder();
         play();
     }
@@ -115,6 +116,10 @@ public class ClientManagerServerSide extends Player implements Runnable {
 
     protected void addPlayerToGame() {
         Server.gameController.Join(this.AuthToken, this.gameName);
+    }
+
+    private void register() {
+        Server.gameController.Register(this);
     }
 
     private void getStartOrder() {
