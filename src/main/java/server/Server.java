@@ -1,5 +1,6 @@
 package server;
 
+import server.log.Logger;
 import server.logic.GameController;
 import server.logic.GameStatus;
 import server.logic.TheMindGame;
@@ -18,6 +19,7 @@ public class Server {
     private final int port;
     protected static List<ClientManagerServerSide> clientManagers;
     protected static GameController gameController;
+    public static final Logger logger = new Logger("src/main/java/server/log/log");;
 
     public Server() {
         this.port = setPort();
@@ -32,7 +34,7 @@ public class Server {
                 final Socket socket = serverSocket.accept();
                 ClientManagerServerSide clientManager = new ClientManagerServerSide(socket);
                 clientManagers.add(clientManager);
-                System.out.println("New client connected...");
+                logger.log("New client connected...");
                 new Thread(clientManager).start();
             }
         } catch (IOException ignored) {}

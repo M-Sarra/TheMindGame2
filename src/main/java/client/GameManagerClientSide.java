@@ -3,9 +3,6 @@ package client;
 import client.UI.ConsoleManager;
 
 import java.net.Socket;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class GameManagerClientSide {
     private enum TimeStatus {PLAY, GET_STATUS, END}
@@ -79,7 +76,7 @@ public class GameManagerClientSide {
                 int playerNumber = Integer.parseInt(consoleManager.getMessage());
                 if (playerNumber < 2 || playerNumber > 8) getPlayerNumber();
                 client.setPlayerNumber(playerNumber);
-                transmitter.sendMessage("playerNumber: " + String.valueOf(client.getPlayerNumber()));
+                transmitter.sendMessage("playerNumber: " + client.getPlayerNumber());
             } catch (Exception e) {
                 getPlayerNumber();
             }

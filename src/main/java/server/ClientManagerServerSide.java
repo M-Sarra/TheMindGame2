@@ -26,6 +26,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
     private GameStatus status;
     private int level;
     private TheMindGame theMindGame;
+    private Thread play;
 
     public ClientManagerServerSide(Socket socket) {
         this.socket = socket;
@@ -34,10 +35,6 @@ public class ClientManagerServerSide extends Player implements Runnable {
         hand = new ArrayList<>();
         status = GameStatus.NotStarted;
         this.level = 0;
-    }
-
-    public void setUsingNinjaCard(boolean useNinjaCard) {
-        Server.gameController.GetGameByName(this.gameName).setNinjaResult(this.AuthToken, useNinjaCard);
     }
 
     protected void setGame(String game) {
@@ -60,6 +57,10 @@ public class ClientManagerServerSide extends Player implements Runnable {
         if (isHost) {
             this.gameName = Server.createGameName();
             String result = Server.gameController.CreateNewGame(this.AuthToken, this.gameName, this.playerNumber);
+            if (result.equals("Success")) {
+                Server.logger.log("New game created. gameName: " + this.gameName +
+                        " Game capacity: " + this.playerNumber);
+            }
             this.theMindGame = Server.gameController.GetGameByName(this.gameName);
             addPlayerToGame();
         }
@@ -89,6 +90,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
             SecureRandom random = new SecureRandom();
             name = String.valueOf(random.nextInt());
         }
+        Server.logger.log("New player's name: " + this.name + "Auth token: " + this.AuthToken);
     }
 
     private void getPlayerNumber() {
@@ -121,6 +123,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
             String message = transmitter.getMessage();
             if (!message.split(" ")[0].equals(this.AuthToken)) getStartOrder();
             if (message.split(" ")[1].equals("start")) {
+                Server.logger.log("Game with name " + this.gameName + " started.");
                 Thread thread = new Thread(() -> Server.gameController.StartGame(token, gameName));
                 thread.start();
             }
@@ -170,17 +173,25 @@ public class ClientManagerServerSide extends Player implements Runnable {
     @Override
     public void StatusChanged(GameStatus status) {
         if (this.status == GameStatus.NotStarted) {
-            Thread play = new Thread(this::play);
+            this.play = new Thread(this::play);
             play.start();
         }
         this.status = status;
         if (status == GameStatus.GameOver ||
         status == GameStatus.Win) {
+            if (this.status == GameStatus.GameOver) {
+                Server.logger.log("Players lost the game " + this.gameName);
+            }
+            else {
+                Server.logger.log("Players won the game " + this.gameName);
+            }
             try {
                 this.socket.close();
+                Server.logger.log("The player connection ended. Auth token: " + this.AuthToken);
             } catch (IOException ignored) {}
             if (this.isHost) {
                 Server.gameController.GetGames().remove(this.gameName);
+                Server.logger.log("Game was removed. Game name: " + this.gameName);
             }
         }
     }
@@ -241,6 +252,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
         private PrintWriter out;
         private Scanner in;
         private final ClientManagerServerSide client;
+        int time = 0;
 
         private MessageTransmitter(Socket socket, ClientManagerServerSide client) {
             this.client = client;
@@ -251,11 +263,23 @@ public class ClientManagerServerSide extends Player implements Runnable {
         }
 
         protected String getMessage() {
+            String message = "Could not get message!!";
             try {
-                return this.in.nextLine();
+                message = this.in.nextLine();
             } catch (Exception e) {
-                return "Could not get message!!";
+                this.time++;
+                if (this.time > 10) {
+                    try {
+                        client.socket.close();
+                        client.play.interrupt();
+                        Server.clientManagers.remove(client);
+                        Server.logger.log("Connection is lost!! player's token: " + client.AuthToken);
+                        return message;
+                    } catch (IOException ignored) {}
+                }
+                getMessage();
             }
+            return message;
         }
 
         protected void sendMessage(String message) {
