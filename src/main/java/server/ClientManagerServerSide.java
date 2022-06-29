@@ -129,6 +129,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
             String message = transmitter.getMessage();
             if (!message.split(" ")[0].equals(this.AuthToken)) getStartOrder();
             if (message.split(" ")[1].equals("start")) {
+                System.out.println(message);
                 Thread thread = new Thread(() -> Server.gameController.StartGame(token, gameName));
                 thread.start();
             }

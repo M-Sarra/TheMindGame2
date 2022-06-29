@@ -93,6 +93,7 @@ public class GameManagerClientSide {
             if (message.contains("AuthToken")) {
                 client.setAuthToken(message.split(" ")[1]);
                 consoleManager.sendMessage("AuthToken: " + client.getAuthToken());
+                transmitter.setAuthToken(this.client.getAuthToken());
             }
         } catch (NumberFormatException ignored) {}
     }
@@ -121,8 +122,20 @@ public class GameManagerClientSide {
         }
 
         messageGetter = new Thread(() -> {
+            int time = 0;
             while (timeStatus != TimeStatus.END) {
                 message = transmitter.getMessage();
+                if (message.equals("Could not get message from server!!")) {
+                    time++;
+                    if (time > 10) {
+                        consoleManager.sendMessage("The connection to the server was lost!");
+                        return;
+                    }
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException ignored) {}
+                    continue;
+                }
                 if (message.contains("useNinjaCard")) askToUseNinja(message);
                 else {
                     consoleManager.sendMessage(message);
