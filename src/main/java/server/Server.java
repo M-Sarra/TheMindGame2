@@ -19,7 +19,7 @@ public class Server {
     private final int port;
     protected static List<ClientManagerServerSide> clientManagers;
     protected static GameController gameController;
-    public static final Logger logger = new Logger("src/main/java/server/log/log");;
+    public static final Logger logger = new Logger("src/main/java/server/log/log");
 
     public Server() {
         this.port = setPort();

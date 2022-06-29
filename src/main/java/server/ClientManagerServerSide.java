@@ -90,7 +90,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
             SecureRandom random = new SecureRandom();
             name = String.valueOf(random.nextInt());
         }
-        Server.logger.log("New player's name: " + this.name + "Auth token: " + this.AuthToken);
+        Server.logger.log("New player's name: " + this.name + " Auth token: " + this.AuthToken);
     }
 
     private void getPlayerNumber() {

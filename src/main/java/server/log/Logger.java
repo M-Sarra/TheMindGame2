@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class Logger {
@@ -28,10 +29,15 @@ public class Logger {
     }
 
     public void log(String event) {
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
-        String log = dtf.toString() + " " + event;
+        String log = getTime() + " " + event;
         printWriter.println(log);
         printWriter.flush();
+    }
+
+    private String getTime() {
+        LocalDateTime currentDateTime = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
+        return currentDateTime.format(formatter);
     }
 
 }
