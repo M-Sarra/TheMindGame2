@@ -1,6 +1,7 @@
 package server;
 
 import server.logic.GameStatus;
+import server.logic.TheMindGame;
 import server.logic.model.Player;
 
 import java.io.IOException;
@@ -16,7 +17,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
     private final Socket socket;
     private boolean isHost = true;
     private String name;
-    private final String AuthToken;
+    private String AuthToken;
     private int playerNumber;
     private final MessageTransmitter transmitter;
     private boolean decisionTime = false;
@@ -24,23 +25,15 @@ public class ClientManagerServerSide extends Player implements Runnable {
     private List<Integer> hand;
     private GameStatus status;
     private int level;
+    private TheMindGame theMindGame;
 
     public ClientManagerServerSide(Socket socket) {
         this.socket = socket;
+        registerAndGetToken();
         transmitter = new MessageTransmitter(socket, this);
-        this.AuthToken = setAuthToken();
         hand = new ArrayList<>();
         status = GameStatus.NotStarted;
         this.level = 0;
-    }
-
-    private String setAuthToken() {
-        String token;
-        do {
-            SecureRandom random = new SecureRandom();
-            token = String.valueOf(Math.abs(random.nextInt()));
-        } while (Server.containsToken(token));
-        return token;
     }
 
     public String getAuthToken() {
@@ -59,18 +52,22 @@ public class ClientManagerServerSide extends Player implements Runnable {
         isHost = host;
     }
 
+    public void setTheMindGame(TheMindGame theMindGame) {
+        this.theMindGame = theMindGame;
+    }
+
     @Override
     public void run() {
         getName();
         Server.joinToGame(this);
         getPlayerNumber();
         if (isHost) {
-            this.setGame(String.valueOf(Server.gameController.GetGames().size() + 1));
-            Server.gameController.CreateNewGame(this.AuthToken, this.gameName, this.playerNumber);
+            this.gameName = Server.createGameName();
+            String result = Server.gameController.CreateNewGame(this.AuthToken, this.gameName, this.playerNumber);
+            this.theMindGame = Server.gameController.GetGameByName(this.gameName);
             addPlayerToGame();
         }
         transmitter.sendMessage("AuthToken: " + AuthToken);
-        register();
         getStartOrder();
         play();
     }
@@ -118,8 +115,8 @@ public class ClientManagerServerSide extends Player implements Runnable {
         Server.gameController.Join(this.AuthToken, this.gameName);
     }
 
-    private void register() {
-        Server.gameController.Register(this);
+    private void registerAndGetToken() {
+       this.AuthToken = Server.gameController.Register(this);
     }
 
     private void getStartOrder() {

@@ -9,6 +9,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -44,19 +45,20 @@ public class Server {
                 if (!game.equals("Game not found!")) {
                     client.setGame(game);
                     client.setHost(false);
+                    client.setTheMindGame(Server.gameController.GetGameByName(game));
                     client.addPlayerToGame();
                 }
             }
         }
     }
 
-    public static boolean containsToken(String token) {
-        for (ClientManagerServerSide clientManager : clientManagers) {
-            if (clientManager.getAuthToken().equals(token)) {
-                return true;
-            }
-        }
-        return false;
+    public static String createGameName() {
+        SecureRandom random = new SecureRandom();
+        String gameName = "default";
+        do {
+            gameName = String.valueOf(random.nextInt());
+        } while (gameController.GetGames().contains(gameName));
+        return gameName;
     }
 
     private static String returnAnExistingGame() {
