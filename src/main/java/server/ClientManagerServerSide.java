@@ -61,14 +61,15 @@ public class ClientManagerServerSide extends Player implements Runnable {
 
     @Override
     public void run() {
+        getName();
         Server.joinToGame(this);
-        getNameAndBotNo();
+        getPlayerNumber();
         if (isHost) {
             this.setGame(String.valueOf(Server.gameController.GetGames().size() + 1));
             Server.gameController.CreateNewGame(this.AuthToken, this.gameName, this.playerNumber);
+            addPlayerToGame();
         }
         transmitter.sendMessage("AuthToken: " + AuthToken);
-        addPlayerToGame();
         getStartOrder();
         play();
     }
@@ -86,10 +87,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
         return answer;
     }
 
-    private void getNameAndBotNo() {
-        if (!decisionTime) {
-            transmitter.sendMessage("decisionTime: false");
-        }
+    private void getName() {
         try {
             String message = transmitter.getMessage();
             if (message.contains("name"))
@@ -97,6 +95,12 @@ public class ClientManagerServerSide extends Player implements Runnable {
         } catch (Exception e) {
             SecureRandom random = new SecureRandom();
             name = String.valueOf(random.nextInt());
+        }
+    }
+
+    private void getPlayerNumber() {
+        if (!decisionTime) {
+            transmitter.sendMessage("decisionTime: false");
         }
         if (isHost) {
             try {
@@ -109,7 +113,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
         }
     }
 
-    private void addPlayerToGame() {
+    protected void addPlayerToGame() {
         Server.gameController.Join(this.AuthToken, this.gameName);
     }
 

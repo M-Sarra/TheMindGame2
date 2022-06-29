@@ -1,6 +1,8 @@
 package server;
 
 import server.logic.GameController;
+import server.logic.GameStatus;
+import server.logic.TheMindGame;
 import server.logic.TheMindGameUI;
 
 import java.io.FileInputStream;
@@ -38,10 +40,11 @@ public class Server {
     protected static synchronized void joinToGame(ClientManagerServerSide client) {
         if (gameController.isOpen()) {
             if (client.decideToJoin()) {
-                String game = gameController.joinAnExistingGame();
+                String game = returnAnExistingGame();
                 if (!game.equals("Game not found!")) {
                     client.setGame(game);
                     client.setHost(false);
+                    client.addPlayerToGame();
                 }
             }
         }
@@ -54,6 +57,18 @@ public class Server {
             }
         }
         return false;
+    }
+
+    private static String returnAnExistingGame() {
+        for (String gameName : gameController.GetGames()) {
+            TheMindGame game = gameController.GetGameByName(gameName);
+            if (game.getStatus() == GameStatus.NotStarted) {
+                if (game.capacity < game.GetCountOfPlayers()) {
+                    return gameName;
+                }
+            }
+        }
+        return "Game not found";
     }
 
     private int setPort() {

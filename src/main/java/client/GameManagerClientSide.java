@@ -27,8 +27,9 @@ public class GameManagerClientSide {
 
     public void startGame() {
         introduceGame();
+        getName();
         setDecisionTime();
-        getNameAndBotNo();
+        getPlayerNumber();
         getAuthToken();
         orderToStart();
     }
@@ -66,24 +67,23 @@ public class GameManagerClientSide {
         }
     }
 
-    private void getNameAndBotNo() {
+    private void getName() {
         consoleManager.sendMessage("Enter your name:");
         client.setName(consoleManager.getMessage());
         transmitter.sendMessage("name: " + client.getName());
-        if (isHost) {
-            getBotNumber();
-        }
     }
 
-    private void getBotNumber() {
-        consoleManager.sendMessage("Enter the number of players (2 - 8):");
-        try {
-            int playerNumber = Integer.parseInt(consoleManager.getMessage());
-            if (playerNumber < 2 || playerNumber > 8) getBotNumber();
-            client.setPlayerNumber(playerNumber);
-            transmitter.sendMessage("playerNumber: " + String.valueOf(client.getPlayerNumber()));
-        } catch (Exception e) {
-            getBotNumber();
+    private void getPlayerNumber() {
+        if (isHost) {
+            consoleManager.sendMessage("Enter the number of players (2 - 8):");
+            try {
+                int playerNumber = Integer.parseInt(consoleManager.getMessage());
+                if (playerNumber < 2 || playerNumber > 8) getPlayerNumber();
+                client.setPlayerNumber(playerNumber);
+                transmitter.sendMessage("playerNumber: " + String.valueOf(client.getPlayerNumber()));
+            } catch (Exception e) {
+                getPlayerNumber();
+            }
         }
     }
 
