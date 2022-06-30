@@ -25,6 +25,7 @@ public class GameManagerClientSide {
         getName();
         setDecisionTime();
         getPlayerNumber();
+        getJoiningToGameResult();
         getAuthToken();
         introduceGame();
         orderToStart();
@@ -83,6 +84,16 @@ public class GameManagerClientSide {
         }
     }
 
+    private void getJoiningToGameResult() {
+        try {
+            String message = transmitter.getMessage();
+            if (message.contains("joinToGameResult")) {
+                boolean result = Boolean.parseBoolean(message.split(" ")[1]);
+
+            }
+        } catch (Exception ignored) {}
+    }
+
     private void getAuthToken() {
         String message = transmitter.getMessage();
         try {
@@ -126,8 +137,8 @@ public class GameManagerClientSide {
             int time = 0;
             while (timeStatus != TimeStatus.END) {
                 message = transmitter.getMessage();
-                if (message.equals("Could not get message from server!!")) {
-                    time++;
+                if (!message.equals("Could not get message from server!!")) {
+                    /**time++;
                     if (time > 10) {
                         consoleManager.sendMessage("The connection to the server was lost!");
                         System.exit(0);
@@ -136,9 +147,10 @@ public class GameManagerClientSide {
                         Thread.sleep(250);
                     } catch (InterruptedException ignored) {
                     }
-                    continue;
+                    continue;*/
+                    consoleManager.sendMessage(message);
                 }
-                consoleManager.sendMessage(message);
+
                 if (message.contains("last played card")) this.timeStatus = TimeStatus.PLAY;
                 if (message.contains("Game finished")) this.timeStatus = TimeStatus.END;
 

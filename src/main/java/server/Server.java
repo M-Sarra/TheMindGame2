@@ -48,7 +48,6 @@ public class Server {
                     client.setGame(game);
                     client.setHost(false);
                     client.setTheMindGame(Server.gameController.GetGameByName(game));
-                    client.addPlayerToGame();
                 }
             }
         }

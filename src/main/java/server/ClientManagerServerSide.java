@@ -30,7 +30,6 @@ public class ClientManagerServerSide extends Player implements Runnable {
 
     public ClientManagerServerSide(Socket socket) {
         this.socket = socket;
-        registerAndGetToken();
         transmitter = new MessageTransmitter(socket, this);
         hand = new ArrayList<>();
         status = GameStatus.NotStarted;
@@ -54,16 +53,11 @@ public class ClientManagerServerSide extends Player implements Runnable {
         getName();
         Server.joinToGame(this);
         getPlayerNumber();
+        registerAndGetToken();
         if (isHost) {
-            this.gameName = Server.createGameName();
-            String result = Server.gameController.CreateNewGame(this.AuthToken, this.gameName, this.playerNumber);
-            if (result.equals("Success")) {
-                Server.logger.log("New game created. gameName: " + this.gameName +
-                        " Game capacity: " + this.playerNumber);
-            }
-            this.theMindGame = Server.gameController.GetGameByName(this.gameName);
-            addPlayerToGame();
+            createNewGame();
         }
+        addPlayerToGame();
         transmitter.sendMessage("AuthToken: " + AuthToken);
         getStartOrder();
     }
@@ -108,8 +102,21 @@ public class ClientManagerServerSide extends Player implements Runnable {
         }
     }
 
+    private void createNewGame() {
+        this.gameName = Server.createGameName();
+        Server.gameController.CreateNewGame(this.AuthToken, this.gameName, this.playerNumber);
+        this.theMindGame = Server.gameController.GetGameByName(this.gameName);
+    }
+
     protected void addPlayerToGame() {
-        Server.gameController.Join(this.AuthToken, this.gameName);
+        boolean joinToGameResult = true;
+        String result = Server.gameController.Join(this.AuthToken, this.gameName);
+        if (result.equals("Game is full")) {
+            this.isHost = true;
+            createNewGame();
+            joinToGameResult = false;
+        }
+        transmitter.sendMessage("joinToGameResult: " + joinToGameResult);
     }
 
     private void registerAndGetToken() {
@@ -123,7 +130,6 @@ public class ClientManagerServerSide extends Player implements Runnable {
             String message = transmitter.getMessage();
             if (!message.split(" ")[0].equals(this.AuthToken)) getStartOrder();
             if (message.split(" ")[1].equals("start")) {
-                Server.logger.log("Game with name " + this.gameName + " started.");
                 Thread thread = new Thread(() -> Server.gameController.StartGame(token, gameName));
                 thread.start();
             }
@@ -267,16 +273,19 @@ public class ClientManagerServerSide extends Player implements Runnable {
             try {
                 message = this.in.nextLine();
             } catch (Exception e) {
+                /**
                 this.time++;
                 if (this.time > 10) {
                     try {
                         client.socket.close();
                         client.play.interrupt();
                         Server.clientManagers.remove(client);
-                        Server.logger.log("Connection is lost!! player's token: " + client.AuthToken);
+                        if (time == 11)
+                            Server.logger.log("Connection is lost!! player's token: " + client.AuthToken);
                         return message;
                     } catch (IOException ignored) {}
                 }
+                 */
                 getMessage();
             }
             return message;
