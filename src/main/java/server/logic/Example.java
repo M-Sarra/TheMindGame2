@@ -1,5 +1,6 @@
 package  server.logic;
 
+import server.log.ConsoleLogger;
 import server.logic.model.IGameController;
 import server.logic.model.Player;
 
@@ -10,7 +11,7 @@ public class Example {
         t.printType(1.34f+2.54d);
         t.printType(1.34d+2.54f);
         try {
-            IGameController controller = new GameController(new TheMindGameUI());
+            IGameController controller = new GameController(new ConsoleLogger());
             Player host = new Player() {
                 @Override
                 public String GetName() {

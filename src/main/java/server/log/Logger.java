@@ -7,7 +7,7 @@ import java.io.PrintWriter;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-public class Logger {
+public class Logger  implements  ILogger{
     String fileName;
     PrintWriter printWriter;
 

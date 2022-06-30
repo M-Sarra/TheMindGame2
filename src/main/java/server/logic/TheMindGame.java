@@ -18,8 +18,8 @@ public class TheMindGame {
     private int ninjaCards;
     private Integer lastPlayedCard;
     private SecureRandom random;
-    private  PlayerInfo host;
-    public int capacity;
+    private PlayerInfo host;
+    private int capacity;
 
     public TheMindGame(String name,GameController controller,PlayerInfo host,int capacity)
     {
@@ -35,7 +35,15 @@ public class TheMindGame {
         this.players = new ArrayList<>();
         this.observers = new ArrayList<>();
     }
+    public  int GetCapacity()
+    {
+        return this.capacity;
+    }
 
+    public String GetHostName()
+    {
+        return this.host.Name;
+    }
 
     public  void  AddObserver(GameObserver observer)
     {
@@ -295,5 +303,13 @@ public class TheMindGame {
         if(this.players.stream().count() >= this.capacity)
             return false;
         return true;
+    }
+
+    public int GetLevel() {
+        return this.level;
+    }
+
+    public void Stop() {
+        this.ChangeStatus(GameStatus.Stoped);
     }
 }
