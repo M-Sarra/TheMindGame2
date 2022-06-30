@@ -142,6 +142,7 @@ public class GameManagerClientSide {
         }
 
         Thread messageGetter = new Thread(() -> {
+            String prevMessage = this.message;
             while (timeStatus != TimeStatus.END) {
                 message = transmitter.getMessage();
                 if (message.equals("Could not get message from server!!")) {
@@ -149,14 +150,16 @@ public class GameManagerClientSide {
                     System.exit(0);
                 }
 
-                if (message.split(" ").equals("hand")) {
+                if (message.equals(prevMessage) && !message.contains("message")) continue;
+
+                if (message.split(" ")[0].equals("card:")) {
                     try {
                         this.level = Integer.parseInt(message.split(" ")[3]);
                         int card = Integer.parseInt(message.split(" ")[1]);
                         if (this.hand.size() >= this.level) {
                             this.hand.clear();
                         }
-                        this.hand.add(card);
+                        if (!this.hand.contains(card)) this.hand.add(card);
                         if (this.hand.size() == this.level) {
                             this.consoleManager.sendMessage("your hand: " + this.hand);
                         }
@@ -170,7 +173,7 @@ public class GameManagerClientSide {
                         System.exit(0);
                     }
                 }
-
+                prevMessage = message;
             }
         });
 

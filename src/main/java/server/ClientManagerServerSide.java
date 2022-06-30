@@ -144,7 +144,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
                 "\nlevel card: 1" +
                 "\nheart cards: " + Server.gameController.GetGameByName(this.gameName).getHeartNumber() +
                 "\nninja cards: 2" +
-                "\nPlayer's: " +
+                "\nPlayers' name: " +
                 Server.gameController.GetGameByName(this.gameName).getPlayersName().toString();
         transmitter.sendMessage(message);
 
@@ -169,12 +169,11 @@ public class ClientManagerServerSide extends Player implements Runnable {
 
     public void sendHand() {
         String message = "Your hand: " + this.hand.toString();
-        System.out.println(message);
         transmitter.sendMessage(message);
     }
 
     private void useNinjaCard() {
-        theMindGame.setNinjaResult(this.AuthToken, true);
+        theMindGame.ProposeNinja(this.AuthToken);
     }
 
     @Override
@@ -250,7 +249,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
     public void GiveCard(Integer card) {
         if (hand.isEmpty()) this.level++;
         this.hand.add(card);
-        transmitter.sendMessage("hand: " + card + " level: " + this.level);
+        transmitter.sendMessage("card: " + card + " level: " + this.level);
     }
 
     class MessageTransmitter {
@@ -258,6 +257,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
         private PrintWriter out;
         private Scanner in;
         private final ClientManagerServerSide client;
+        String prevMessage = "";
 
         private MessageTransmitter(Socket socket, ClientManagerServerSide client) {
             this.client = client;
@@ -276,9 +276,13 @@ public class ClientManagerServerSide extends Player implements Runnable {
             return message;
         }
 
-        protected void sendMessage(String message) {
-            this.out.println(message);
-            this.out.flush();
+        protected synchronized void sendMessage(String message) {
+            if (!message.equals(this.prevMessage)) {
+                this.out.println(message);
+                this.out.flush();
+            }
+            this.prevMessage = message;
+            if (message.split(" ")[0].equals("card:")) System.out.println(message);
         }
 
         protected void sendMessageToOtherClient(String message) {
