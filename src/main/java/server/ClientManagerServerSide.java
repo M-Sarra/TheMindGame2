@@ -84,7 +84,6 @@ public class ClientManagerServerSide extends Player implements Runnable {
             SecureRandom random = new SecureRandom();
             name = String.valueOf(random.nextInt());
         }
-        Server.logger.log("New player's name: " + this.name + " Auth token: " + this.AuthToken);
     }
 
     private void getPlayerNumber() {
@@ -121,6 +120,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
 
     private void registerAndGetToken() {
        this.AuthToken = Server.gameController.Register(this);
+        Server.logger.log("New player's name: " + this.name + " Auth token: " + this.AuthToken);
     }
 
     private void getStartOrder() {
