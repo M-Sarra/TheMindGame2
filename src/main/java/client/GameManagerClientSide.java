@@ -89,7 +89,10 @@ public class GameManagerClientSide {
             String message = transmitter.getMessage();
             if (message.contains("joinToGameResult")) {
                 boolean result = Boolean.parseBoolean(message.split(" ")[1]);
-
+                if (!result) {
+                    this.isHost = true;
+                    consoleManager.sendMessage("All games are full. You are joined to a new game.");
+                }
             }
         } catch (Exception ignored) {}
     }
@@ -134,25 +137,19 @@ public class GameManagerClientSide {
         }
 
         Thread messageGetter = new Thread(() -> {
-            int time = 0;
             while (timeStatus != TimeStatus.END) {
                 message = transmitter.getMessage();
-                if (!message.equals("Could not get message from server!!")) {
-                    /**time++;
-                    if (time > 10) {
-                        consoleManager.sendMessage("The connection to the server was lost!");
-                        System.exit(0);
-                    }
-                    try {
-                        Thread.sleep(250);
-                    } catch (InterruptedException ignored) {
-                    }
-                    continue;*/
-                    consoleManager.sendMessage(message);
+                if (message.equals("Could not get message from server!!")) {
+                    consoleManager.sendMessage("The connection to the server was lost!");
+                    System.exit(0);
                 }
+                consoleManager.sendMessage(message);
 
                 if (message.contains("last played card")) this.timeStatus = TimeStatus.PLAY;
-                if (message.contains("Game finished")) this.timeStatus = TimeStatus.END;
+                if (message.contains("Game finished")) {
+                    this.timeStatus = TimeStatus.END;
+                    System.exit(0);
+                }
 
             }
         });

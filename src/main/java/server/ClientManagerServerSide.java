@@ -179,25 +179,24 @@ public class ClientManagerServerSide extends Player implements Runnable {
     @Override
     public void StatusChanged(GameStatus status) {
         if (this.status == GameStatus.NotStarted) {
-            this.play = new Thread(this::play);
-            play.start();
+            //?
+            synchronized (this) {
+                this.play = new Thread(this::play);
+                play.start();
+            }
         }
         this.status = status;
         if (status == GameStatus.GameOver ||
         status == GameStatus.Win) {
-            if (this.status == GameStatus.GameOver) {
-                Server.logger.log("Players lost the game " + this.gameName);
-            }
-            else {
-                Server.logger.log("Players won the game " + this.gameName);
-            }
             try {
                 this.socket.close();
                 Server.logger.log("The player connection ended. Auth token: " + this.AuthToken);
             } catch (IOException ignored) {}
             if (this.isHost) {
                 Server.gameController.GetGames().remove(this.gameName);
-                Server.logger.log("Game was removed. Game name: " + this.gameName);
+                if (this.isHost) {
+                    Server.logger.log("Game was removed. Game name: " + this.gameName);
+                }
             }
         }
     }
@@ -206,20 +205,21 @@ public class ClientManagerServerSide extends Player implements Runnable {
     public void NotifyPlaysCard(String player, Integer card) {
         if (this.hand.contains(card))
             hand.remove(card);
-        if (card > Collections.min(this.hand)) {
-            List<Integer> removedCards = new ArrayList<>();
-            for (int cardNumber : this.hand) {
-                if (card > cardNumber) removedCards.add(cardNumber);
-            }
-            this.hand.removeAll(removedCards);
+        List<Integer> removedCards = new ArrayList<>();
+        for (int cardNumber : this.hand) {
+            if (card > cardNumber) removedCards.add(cardNumber);
         }
+        if (!removedCards.isEmpty()) this.hand.removeAll(removedCards);
+
         String message = "player " + player + " played with card " + card +
                 "\nlast played card: " + card +
                 "\nlevel card: " + this.level +
                 "\nheart cards: " + Server.gameController.GetGameByName(this.gameName).getHeartNumber() +
                 "\nninja cards: " + Server.gameController.GetGameByName(this.gameName).GetNinjaCards();
         transmitter.sendMessage(message);
-        sendHand();
+        if (!this.hand.isEmpty()) {
+            sendHand();
+        }
     }
 
     @Override
@@ -249,7 +249,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
     @Override
     public void GiveCard(Integer card) {
         if (hand.isEmpty()) this.level++;
-        hand.add(card);
+        this.hand.add(card);
         if (hand.size() == this.level) sendHand();
     }
 
@@ -272,7 +272,8 @@ public class ClientManagerServerSide extends Player implements Runnable {
             String message = "Could not get message!!";
             try {
                 message = this.in.nextLine();
-            } catch (Exception e) {
+                System.out.println(message);
+            } catch (Exception ignored) {
                 /**
                 this.time++;
                 if (this.time > 10) {
@@ -286,7 +287,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
                     } catch (IOException ignored) {}
                 }
                  */
-                getMessage();
+                //getMessage();
             }
             return message;
         }

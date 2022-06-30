@@ -4,11 +4,14 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Scanner;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MessageTransmitter {
     private final Scanner in;
     private final PrintWriter out;
     private String AuthToken;
+    int time = 0;
 
     public MessageTransmitter(Socket socket) {
         Scanner in1;
@@ -30,18 +33,33 @@ public class MessageTransmitter {
     }
 
     public String getMessage() {
+        Timer timer = new Timer();
+        String message;
         try {
-            return in.nextLine();
+            message =  in.nextLine();
         } catch (Exception e) {
-            return "Could not get message from server!!";
+            this.time++;
+            if (time > 100) {
+                timer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        getMessage();
+                    }
+                }, 100);
+            }
+            message = "Could not get message from server!!";
+
         }
+        return message;
     }
 
     public void sendMessage(String message) {
         try {
             out.println(message);
             out.flush();
-        } catch (Exception ignored){}
+        } catch (Exception e){
+            System.out.println("message is not sent");
+        }
     }
 
     public void sendMessageByToken(String message) {
