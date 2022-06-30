@@ -4,7 +4,6 @@ import server.log.Logger;
 import server.logic.GameController;
 import server.logic.GameStatus;
 import server.logic.TheMindGame;
-import server.logic.TheMindGameUI;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -24,8 +23,9 @@ public class Server {
     public Server() {
         this.port = setPort();
         clientManagers = new ArrayList<>();
-        gameController = new GameController(new TheMindGameUI());
+        gameController = new GameController(logger);
     }
+    String temp = "";
 
     public void start() {
         try {
@@ -65,10 +65,10 @@ public class Server {
     private static String returnAnExistingGame() {
         for (String gameName : gameController.GetGames()) {
             TheMindGame game = gameController.GetGameByName(gameName);
-            if (game.getStatus() == GameStatus.NotStarted) {
-                if (game.capacity < game.GetCountOfPlayers()) {
+            if (game.IsJoinable()) {
+
                     return gameName;
-                }
+
             }
         }
         return "Game not found";

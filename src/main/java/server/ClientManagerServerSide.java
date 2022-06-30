@@ -169,6 +169,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
 
     public void sendHand() {
         String message = "Your hand: " + this.hand.toString();
+        System.out.println(message);
         transmitter.sendMessage(message);
     }
 
@@ -179,7 +180,6 @@ public class ClientManagerServerSide extends Player implements Runnable {
     @Override
     public void StatusChanged(GameStatus status) {
         if (this.status == GameStatus.NotStarted) {
-            //?
             synchronized (this) {
                 this.play = new Thread(this::play);
                 play.start();
@@ -217,9 +217,9 @@ public class ClientManagerServerSide extends Player implements Runnable {
                 "\nheart cards: " + Server.gameController.GetGameByName(this.gameName).getHeartNumber() +
                 "\nninja cards: " + Server.gameController.GetGameByName(this.gameName).GetNinjaCards();
         transmitter.sendMessage(message);
-        if (!this.hand.isEmpty()) {
-            sendHand();
-        }
+
+        sendHand();
+
     }
 
     @Override
@@ -250,7 +250,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
     public void GiveCard(Integer card) {
         if (hand.isEmpty()) this.level++;
         this.hand.add(card);
-        if (hand.size() == this.level) sendHand();
+        transmitter.sendMessage("hand: " + card + " level: " + this.level);
     }
 
     class MessageTransmitter {
@@ -258,7 +258,6 @@ public class ClientManagerServerSide extends Player implements Runnable {
         private PrintWriter out;
         private Scanner in;
         private final ClientManagerServerSide client;
-        int time = 0;
 
         private MessageTransmitter(Socket socket, ClientManagerServerSide client) {
             this.client = client;
@@ -273,22 +272,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
             try {
                 message = this.in.nextLine();
                 System.out.println(message);
-            } catch (Exception ignored) {
-                /**
-                this.time++;
-                if (this.time > 10) {
-                    try {
-                        client.socket.close();
-                        client.play.interrupt();
-                        Server.clientManagers.remove(client);
-                        if (time == 11)
-                            Server.logger.log("Connection is lost!! player's token: " + client.AuthToken);
-                        return message;
-                    } catch (IOException ignored) {}
-                }
-                 */
-                //getMessage();
-            }
+            } catch (Exception ignored) {}
             return message;
         }
 

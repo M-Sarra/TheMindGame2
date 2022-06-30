@@ -3,6 +3,8 @@ package client;
 import client.UI.ConsoleManager;
 
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 public class GameManagerClientSide {
     private enum TimeStatus {PLAY, GET_STATUS, END}
@@ -12,12 +14,15 @@ public class GameManagerClientSide {
     private String message = "";
     private boolean isHost = true;
     private TimeStatus timeStatus;
+    private int level;
+    private List<Integer> hand;
 
     public GameManagerClientSide(Socket socket, Client client) {
         this.client = client;
         transmitter = new MessageTransmitter(socket);
         consoleManager = new ConsoleManager();
         this.timeStatus = TimeStatus.GET_STATUS;
+        this.hand = new ArrayList<>();
     }
 
     public void startGame() {
@@ -143,12 +148,27 @@ public class GameManagerClientSide {
                     consoleManager.sendMessage("The connection to the server was lost!");
                     System.exit(0);
                 }
-                consoleManager.sendMessage(message);
 
-                if (message.contains("last played card")) this.timeStatus = TimeStatus.PLAY;
-                if (message.contains("Game finished")) {
-                    this.timeStatus = TimeStatus.END;
-                    System.exit(0);
+                if (message.split(" ").equals("hand")) {
+                    try {
+                        this.level = Integer.parseInt(message.split(" ")[3]);
+                        int card = Integer.parseInt(message.split(" ")[1]);
+                        if (this.hand.size() >= this.level) {
+                            this.hand.clear();
+                        }
+                        this.hand.add(card);
+                        if (this.hand.size() == this.level) {
+                            this.consoleManager.sendMessage("your hand: " + this.hand);
+                        }
+                    } catch (Exception ignored) {}
+                }
+                else {
+                    consoleManager.sendMessage(message);
+                    if (message.contains("last played card")) this.timeStatus = TimeStatus.PLAY;
+                    if (message.contains("Game finished")) {
+                        this.timeStatus = TimeStatus.END;
+                        System.exit(0);
+                    }
                 }
 
             }
