@@ -1,5 +1,6 @@
 package server.logic;
 
+import server.log.ILogger;
 import server.logic.model.*;
 // A Java program for a Serverside
 import java.security.SecureRandom;
@@ -10,15 +11,15 @@ import java.util.List;
 
 public class GameController extends GameObserver implements IGameController {
     private List<TheMindGame> games;
-    private TheMindGameUI ui;
+    private ILogger logger;
     private  List<PlayerInfo> players;
     private SecureRandom random;
     private int lastBotIndex;
 
-    public GameController(TheMindGameUI ui)
+    public GameController(ILogger logger)
     {
         this.lastBotIndex = 0;
-        this.ui = ui;
+        this.logger = logger;
         this.random = new SecureRandom();// SecureRandom.getInstanceStrong();
         this.players = new ArrayList<PlayerInfo>();
         this.games = new ArrayList<>();
@@ -49,7 +50,7 @@ public class GameController extends GameObserver implements IGameController {
         PlayerInfo host = this.GetPlayerByToken(hostToken);
         if(host == null)
             return "Invalid Host";
-        if(capacity < 2 || capacity >6)
+        if(capacity < 2 || capacity >8)
             return "Invalid Capacity";
         game = new TheMindGame(gameName,this,host,capacity);
         this.games.add(game);
@@ -139,7 +140,7 @@ public class GameController extends GameObserver implements IGameController {
 
 
     private void Log(String message) {
-        this.ui.DisplayEvent( "["+ LocalDateTime.now().format(DateTimeFormatter.ISO_TIME)+"] "+message);
+        this.logger.log( "["+ LocalDateTime.now().format(DateTimeFormatter.ISO_TIME)+"] "+message);
     }
 
     //Todo: سارا
@@ -151,7 +152,7 @@ public class GameController extends GameObserver implements IGameController {
         GameStatus status = game.getStatus();
         if(status != GameStatus.NotStarted && status != GameStatus.GameOver)
             return "Invalid time to start";
-        int count = game.capacity- game.GetCountOfPlayers();
+        int count = game.GetCapacity()- game.GetCountOfPlayers();
         for (int i = 0 ; i < count;i++) {
             this.lastBotIndex++;
             this.AddBot(token, "Bot" + lastBotIndex, gameName);
@@ -244,5 +245,22 @@ public class GameController extends GameObserver implements IGameController {
         if(result.equals("Success"))
             return gameName;
         return result;
+    }
+
+    public String RemoveGame(String token,String gameName)
+    {
+        PlayerInfo player = this.GetPlayerByToken(token);
+        if(player == null)
+            return "Invalid User";
+        TheMindGame game = this.GetGameByName(gameName);
+        if(game == null)
+            return "Invalid Game";
+        if(game.GetHostName().compareTo(player.Name) != 0)
+            return "Player is not host.";
+        GameStatus status = game.getStatus();
+        if(status != GameStatus.GameOver)
+            game.Stop();
+        this.games.remove(game);
+        return "Success";
     }
 }
