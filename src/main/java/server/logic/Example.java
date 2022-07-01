@@ -82,8 +82,8 @@ public class Example {
         gamePanel.SetMessenger1(gameMessenger);
         RemoteGamePanel botPanel = new RemoteGamePanel(bot);
         DirectMessenger botMessenger = new DirectMessenger(botPanel);
-        gameMessenger.SetAudiance(botMessenger);
-        botMessenger.SetAudiance(gameMessenger);
+        gameMessenger.SetAudience(botMessenger);
+        botMessenger.SetAudience(gameMessenger);
         botPanel.SetMessenger(botMessenger);
         String botToken = controller.Join1(gamePanel, gameName);
         gamePanel.SetToken(botToken);

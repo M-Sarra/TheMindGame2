@@ -18,6 +18,7 @@ public class TheMindGame implements IGamePanel {
     private  int heartCards;
     private int ninjaCards;
     private Integer lastPlayedCard;
+    private Integer worngCard;
     private SecureRandom random;
     private PlayerInfo host;
     private int capacity;
@@ -72,6 +73,7 @@ public class TheMindGame implements IGamePanel {
         this.ChangeStatus(GameStatus.Dealing);
         this.level = level;
         this.lastPlayedCard = 0;
+        this.worngCard = 0;
         this.usedCards.clear();
         this.Deal();
         this.ChangeStatus(GameStatus.Playing);
@@ -231,8 +233,10 @@ public class TheMindGame implements IGamePanel {
             NotifyPlayingCard(player.Name, card);
             this.usedCards.remove(card);
             if (!player.ForceToPlay1) {
-                if (card < this.lastPlayedCard)
+                if (card < this.lastPlayedCard && card > this.worngCard) {
                     this.MissHeart();
+                    this.worngCard = this.lastPlayedCard;
+                }
                 this.lastPlayedCard = card;
             }
             if (this.status == GameStatus.GameOver)

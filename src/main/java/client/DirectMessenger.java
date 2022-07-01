@@ -16,7 +16,7 @@ public class DirectMessenger implements IMessenger{
     }
 
 
-    public void SetAudiance(DirectMessenger messenger) {
+    public void SetAudience(IMessenger messenger) {
         this.audience = messenger;
     }
 }
