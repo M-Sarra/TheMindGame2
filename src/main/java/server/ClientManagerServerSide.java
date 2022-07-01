@@ -246,9 +246,9 @@ public class ClientManagerServerSide extends Player implements Runnable {
 
     @Override
     public void GiveCard(Integer card) {
-        if (hand.isEmpty()) this.level++;
+        if (this.hand.isEmpty()) this.level++;
         this.hand.add(card);
-        transmitter.sendMessage("card: " + card + " level: " + this.level);
+        this.transmitter.sendMessage("card: " + card + " level: " + this.level);
     }
 
     class MessageTransmitter {
