@@ -154,11 +154,12 @@ public class GameManagerClientSide {
 
                 if (message.split(" ")[0].equals("card:")) {
                     try {
-                        this.level = Integer.parseInt(message.split(" ")[3]);
-                        int card = Integer.parseInt(message.split(" ")[1]);
-                        if (this.hand.size() >= this.level) {
+                        int level = Integer.parseInt(message.split(" ")[3]);
+                        if (this.level != level) {
+                            this.level = level;
                             this.hand.clear();
                         }
+                        int card = Integer.parseInt(message.split(" ")[1]);
                         if (!this.hand.contains(card)) this.hand.add(card);
                         if (this.hand.size() == this.level) {
                             this.consoleManager.sendMessage("your hand: " + this.hand);
