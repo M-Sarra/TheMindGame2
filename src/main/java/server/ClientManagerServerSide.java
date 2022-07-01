@@ -142,10 +142,11 @@ public class ClientManagerServerSide extends Player implements Runnable {
         message = "Game started" +
                 "\nGame name: " + this.gameName +
                 "\nlevel card: 1" +
-                "\nheart cards: " + Server.gameController.GetGameByName(this.gameName).getHeartNumber() +
+                "\nheart cards: " + this.theMindGame.getHeartNumber() +
                 "\nninja cards: 2" +
                 "\nPlayers' name: " +
-                Server.gameController.GetGameByName(this.gameName).getPlayersName().toString();
+                this.theMindGame.getPlayersName().toString();
+
         this.transmitter.sendMessage(message);
 
         while (this.status != GameStatus.GameOver || this.status != GameStatus.Win) {
@@ -186,6 +187,13 @@ public class ClientManagerServerSide extends Player implements Runnable {
         this.status = status;
         if (status == GameStatus.GameOver ||
         status == GameStatus.Win) {
+            if (this.status == GameStatus.GameOver) {
+                transmitter.sendMessage("You lost the game!!");
+            }
+            else {
+                transmitter.sendMessage("You won the game.");
+            }
+            transmitter.sendMessage("Game finished");
             try {
                 this.socket.close();
                 Server.logger.log("The player connection ended. Auth token: " + this.AuthToken);

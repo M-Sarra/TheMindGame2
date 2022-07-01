@@ -3,6 +3,7 @@ package client;
 import client.UI.ConsoleManager;
 import server.Server;
 
+import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,8 +18,10 @@ public class GameManagerClientSide {
     private TimeStatus timeStatus;
     private int level;
     private List<Integer> hand;
+    private Socket socket;
 
     public GameManagerClientSide(Socket socket, Client client) {
+        this.socket = socket;
         this.client = client;
         transmitter = new MessageTransmitter(socket);
         consoleManager = new ConsoleManager();
@@ -133,6 +136,7 @@ public class GameManagerClientSide {
                 orderToStart();
             }
         }
+        else start();
     }
 
     private void start() {
@@ -173,6 +177,9 @@ public class GameManagerClientSide {
                     if (message.contains("last played card")) this.timeStatus = TimeStatus.PLAY;
                     if (message.contains("Game finished")) {
                         this.timeStatus = TimeStatus.END;
+                        try {
+                            this.socket.close();
+                        } catch (IOException ignored) {}
                         System.exit(0);
                     }
                 }
@@ -184,7 +191,6 @@ public class GameManagerClientSide {
         Thread messageSender = new Thread(() -> {
             while (timeStatus != TimeStatus.END) {
                 this.message = consoleManager.getMessage();
-                System.out.println(this.timeStatus);
                 if (isValidMessage(message)) {
                     if (!message.contains("message")) {
                         this.timeStatus = TimeStatus.GET_STATUS;
@@ -208,17 +214,18 @@ public class GameManagerClientSide {
             } catch (Exception e) {
                 return false;
             }
-        }
-        if (timeStatus == TimeStatus.PLAY) {
-            int n;
-            try {
-                n = Integer.parseInt(message);
-                if (n != 0) this.message = "cardNumber: " + n;
-            } catch (NumberFormatException e) {
-                consoleManager.sendMessage("Invalid input!");
-                return false;
+        } else {
+            if (timeStatus == TimeStatus.PLAY) {
+                int n;
+                try {
+                    n = Integer.parseInt(message);
+                    if (n != 0) this.message = "cardNumber: " + n;
+                } catch (NumberFormatException e) {
+                    consoleManager.sendMessage("Invalid input!");
+                    return false;
+                }
+                return n >= 0 && n < 100;
             }
-            return n >= 0 && n < 100;
         }
         return false;
     }
