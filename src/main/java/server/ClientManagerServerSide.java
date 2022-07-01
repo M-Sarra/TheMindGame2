@@ -146,7 +146,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
                 "\nninja cards: 2" +
                 "\nPlayers' name: " +
                 Server.gameController.GetGameByName(this.gameName).getPlayersName().toString();
-        transmitter.sendMessage(message);
+        this.transmitter.sendMessage(message);
 
         while (this.status != GameStatus.GameOver || this.status != GameStatus.Win) {
             message = transmitter.getMessage();
@@ -179,10 +179,9 @@ public class ClientManagerServerSide extends Player implements Runnable {
     @Override
     public void StatusChanged(GameStatus status) {
         if (this.status == GameStatus.NotStarted) {
-            synchronized (this) {
-                this.play = new Thread(this::play);
-                play.start();
-            }
+            this.status = status;
+            this.play = new Thread(this::play);
+            play.start();
         }
         this.status = status;
         if (status == GameStatus.GameOver ||
@@ -247,9 +246,9 @@ public class ClientManagerServerSide extends Player implements Runnable {
 
     @Override
     public void GiveCard(Integer card) {
-        if (hand.isEmpty()) this.level++;
+        if (this.hand.isEmpty()) this.level++;
         this.hand.add(card);
-        transmitter.sendMessage("card: " + card + " level: " + this.level);
+        this.transmitter.sendMessage("card: " + card + " level: " + this.level);
     }
 
     class MessageTransmitter {
@@ -276,13 +275,12 @@ public class ClientManagerServerSide extends Player implements Runnable {
             return message;
         }
 
-        protected synchronized void sendMessage(String message) {
+        protected void sendMessage(String message) {
             if (!message.equals(this.prevMessage)) {
                 this.out.println(message);
                 this.out.flush();
             }
             this.prevMessage = message;
-            if (message.split(" ")[0].equals("card:")) System.out.println(message);
         }
 
         protected void sendMessageToOtherClient(String message) {

@@ -1,13 +1,14 @@
 package client;
 
 import client.UI.ConsoleManager;
+import server.Server;
 
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
 public class GameManagerClientSide {
-    private enum TimeStatus {PLAY, GET_STATUS, END}
+    private enum TimeStatus {NOT_STARTED, PLAY, GET_STATUS, END}
     private final Client client;
     private final MessageTransmitter transmitter;
     private final ConsoleManager consoleManager;
@@ -21,7 +22,7 @@ public class GameManagerClientSide {
         this.client = client;
         transmitter = new MessageTransmitter(socket);
         consoleManager = new ConsoleManager();
-        this.timeStatus = TimeStatus.GET_STATUS;
+        this.timeStatus = TimeStatus.NOT_STARTED;
         this.hand = new ArrayList<>();
     }
 
@@ -135,16 +136,11 @@ public class GameManagerClientSide {
     }
 
     private void start() {
-        message = transmitter.getMessage();
-        if (message.contains("Game started")) {
-            this.timeStatus = TimeStatus.PLAY;
-            consoleManager.sendMessage(message);
-        }
-
         Thread messageGetter = new Thread(() -> {
             String prevMessage = this.message;
             while (timeStatus != TimeStatus.END) {
-                message = transmitter.getMessage();
+                this.message = transmitter.getMessage();
+
                 if (message.equals("Could not get message from server!!")) {
                     consoleManager.sendMessage("The connection to the server was lost!");
                     System.exit(0);
@@ -152,13 +148,20 @@ public class GameManagerClientSide {
 
                 if (message.equals(prevMessage) && !message.contains("message")) continue;
 
+                if (this.message.contains("Game started")) {
+                    if (this.timeStatus == TimeStatus.NOT_STARTED) {
+                        this.timeStatus = TimeStatus.PLAY;
+                    }
+                }
+
                 if (message.split(" ")[0].equals("card:")) {
                     try {
-                        this.level = Integer.parseInt(message.split(" ")[3]);
-                        int card = Integer.parseInt(message.split(" ")[1]);
-                        if (this.hand.size() >= this.level) {
+                        int level = Integer.parseInt(message.split(" ")[3]);
+                        if (this.level != level) {
+                            this.level = level;
                             this.hand.clear();
                         }
+                        int card = Integer.parseInt(message.split(" ")[1]);
                         if (!this.hand.contains(card)) this.hand.add(card);
                         if (this.hand.size() == this.level) {
                             this.consoleManager.sendMessage("your hand: " + this.hand);
@@ -173,18 +176,19 @@ public class GameManagerClientSide {
                         System.exit(0);
                     }
                 }
+
                 prevMessage = message;
             }
         });
 
         Thread messageSender = new Thread(() -> {
             while (timeStatus != TimeStatus.END) {
-                message = consoleManager.getMessage();
+                this.message = consoleManager.getMessage();
                 if (isValidMessage(message)) {
                     if (!message.contains("message")) {
                         this.timeStatus = TimeStatus.GET_STATUS;
                     }
-                    transmitter.sendMessageByToken(message);
+                    this.transmitter.sendMessageByToken(this.message);
                 }
             }
         });
