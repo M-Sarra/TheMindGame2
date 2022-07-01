@@ -21,10 +21,6 @@ public interface IGameController  {
     List<String> GetGames();
     List<String> GetJoinableGames();
     String JoinToAvailableGame(String token);
-
-
-    //public abstract String AddBot(String token, String name,String gameName);
-
     String Join(String token,String gameName);
     String Register(Player observer);
 

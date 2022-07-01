@@ -1,6 +1,9 @@
 package  server.logic;
 
+import client.DirectMessenger;
+import client.RemoteGamePanel;
 import server.log.ConsoleLogger;
+import server.logic.model.BotPlayer;
 import server.logic.model.IGameController;
 import server.logic.model.Player;
 
@@ -11,7 +14,7 @@ public class Example {
         t.printType(1.34f+2.54d);
         t.printType(1.34d+2.54f);
         try {
-            IGameController controller = new GameController(new ConsoleLogger());
+            GameController controller = new GameController(new ConsoleLogger());
             Player host = new Player() {
                 @Override
                 public String GetName() {
@@ -52,6 +55,11 @@ public class Example {
             String gameName = "Default";
             int count = 5;
             controller.CreateNewGame(hostToken, gameName,count);
+            for (int i = 0 ; i < count;i++) {
+                String name = "Bot" + i;
+                AddBot(controller, name, gameName);
+            }
+
             controller.StartGame(null,gameName);
             while (controller.IsOpen()) {
                 Thread.sleep(50);
@@ -60,7 +68,29 @@ public class Example {
         {
             System.out.println(ex.getMessage());
         }
+
+
     }
+
+    static String AddBot(GameController controller, String name,String gameName) {
+        TheMindGame game = controller.GetGameByName(gameName);
+        if (game == null)
+            return "Invalid game.";
+        BotPlayer bot = new BotPlayer(name);
+        MessageGamePanel gamePanel = new MessageGamePanel(game,name);
+        DirectMessenger gameMessenger = new DirectMessenger(gamePanel);
+        gamePanel.SetMessenger1(gameMessenger);
+        RemoteGamePanel botPanel = new RemoteGamePanel(bot);
+        DirectMessenger botMessenger = new DirectMessenger(botPanel);
+        gameMessenger.SetAudiance(botMessenger);
+        botMessenger.SetAudiance(gameMessenger);
+        botPanel.SetMessenger(botMessenger);
+        String botToken = controller.Join1(gamePanel, gameName);
+        gamePanel.SetToken(botToken);
+        bot.Join(botToken,  game);
+        return "Success";
+    }
+
 
 }
 

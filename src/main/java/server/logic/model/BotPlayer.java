@@ -13,7 +13,7 @@ import java.util.TimerTask;
 public class BotPlayer extends Player {
     private final String name;
     private String token;
-    private TheMindGame game;
+    private IGamePanel game;
     private Timer timer;
     private List<Integer> hand;
     private LocalDateTime time;
@@ -39,7 +39,7 @@ public class BotPlayer extends Player {
             }
         },0,100);
     }
-    public void Join(String token, TheMindGame game)
+    public void Join(String token, IGamePanel game)
     {
         this.token = token;
         this.game = game;

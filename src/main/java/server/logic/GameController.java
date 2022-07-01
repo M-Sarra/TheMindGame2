@@ -1,5 +1,8 @@
 package server.logic;
 
+import client.DirectMessenger;
+import client.Messenger;
+import client.RemoteGamePanel;
 import server.log.ILogger;
 import server.logic.model.*;
 // A Java program for a Serverside
@@ -76,15 +79,14 @@ public class GameController extends GameObserver implements IGameController {
 
 
      String AddBot(String token, String name,String gameName) {
-        TheMindGame game = this.GetGameByName(gameName);
-        if(game == null)
-            return "Invalid game.";
-        BotPlayer bot = new BotPlayer(name);
-
-        String botToken =  Join1(bot,gameName);
-        bot.Join(botToken,game);
-        return "Success";
-    }
+         TheMindGame game = this.GetGameByName(gameName);
+         if (game == null)
+             return "Invalid game.";
+         BotPlayer bot = new BotPlayer(name);
+         String botToken = Join1(bot, gameName);
+         bot.Join(botToken,  game);
+         return "Success";
+     }
     //Todo: این دیگه قدیمی شد. از اون یکی استفاده کنیم.
     public String Join1( Player observer,String gameName)
     {
@@ -103,6 +105,7 @@ public class GameController extends GameObserver implements IGameController {
          game.AddPlayer(player);
         return token;
     }
+
     @Override
     public String Join( String token,String gameName)
     {
@@ -143,7 +146,7 @@ public class GameController extends GameObserver implements IGameController {
         this.logger.log( "["+ LocalDateTime.now().format(DateTimeFormatter.ISO_TIME)+"] "+message);
     }
 
-    //Todo: سارا
+
     @Override
     public String StartGame(String token,  String gameName) {
         TheMindGame game = this.GetGameByName(gameName);

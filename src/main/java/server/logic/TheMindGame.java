@@ -1,12 +1,13 @@
 package server.logic;
 
 import server.logic.model.GameObserver;
+import server.logic.model.IGamePanel;
 import server.logic.model.PlayerInfo;
 
 import java.security.*;
 import java.util.*;
 
-public class TheMindGame {
+public class TheMindGame implements IGamePanel {
     public String Name;
     private GameController controller;
     private GameStatus status;
@@ -217,6 +218,7 @@ public class TheMindGame {
         return true;
     }
 
+    @Override
     public String Play(String token, Integer card) {
         synchronized (this) {
             if (this.status != GameStatus.Playing)
