@@ -17,7 +17,7 @@ public class BotPlayer extends Player {
     private Timer timer;
     private List<Integer> hand;
     private LocalDateTime time;
-    private final int DelayForeachCard = 500;
+    private final int DelayForeachCard = 2000;
     private final int InitialDelay = 5000;
     private SecureRandom random;
     private boolean forcePlayCard;

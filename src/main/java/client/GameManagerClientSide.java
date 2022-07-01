@@ -184,6 +184,7 @@ public class GameManagerClientSide {
         Thread messageSender = new Thread(() -> {
             while (timeStatus != TimeStatus.END) {
                 this.message = consoleManager.getMessage();
+                System.out.println(this.timeStatus);
                 if (isValidMessage(message)) {
                     if (!message.contains("message")) {
                         this.timeStatus = TimeStatus.GET_STATUS;

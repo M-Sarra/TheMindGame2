@@ -1,5 +1,6 @@
 package server.logic;
 
+import server.log.ILogger;
 import server.logic.model.GameObserver;
 import server.logic.model.IGamePanel;
 import server.logic.model.PlayerInfo;
@@ -22,9 +23,11 @@ public class TheMindGame implements IGamePanel {
     private SecureRandom random;
     private PlayerInfo host;
     private int capacity;
+    private ILogger logger;
 
-    public TheMindGame(String name,GameController controller,PlayerInfo host,int capacity)
+    public TheMindGame(String name,GameController controller,PlayerInfo host,int capacity,ILogger logger)
     {
+        this.logger = logger;
         this.host = host;
         this.capacity = capacity;
         this.Name = name;
@@ -130,7 +133,16 @@ public class TheMindGame implements IGamePanel {
                     }
                 };*/
 
-                Thread observerInform = new Thread(()->          observer.StatusChanged(status));
+                Thread observerInform = new Thread(()->
+
+                {
+                    try {
+                        observer.StatusChanged(status);
+                    } catch (Exception ex) {
+                        this.logger.log(ex.toString());
+                    }
+                });
+
                 observerInform.start();;
             }
         });

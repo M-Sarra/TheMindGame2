@@ -205,7 +205,10 @@ public class ClientManagerServerSide extends Player implements Runnable {
             hand.remove(card);
         List<Integer> removedCards = new ArrayList<>();
         for (int cardNumber : this.hand) {
-            if (card > cardNumber) removedCards.add(cardNumber);
+            if (card > cardNumber) {
+                removedCards.add(cardNumber);
+                this.theMindGame.Play(this.AuthToken, cardNumber);
+            }
         }
         if (!removedCards.isEmpty()) this.hand.removeAll(removedCards);
 
@@ -227,6 +230,10 @@ public class ClientManagerServerSide extends Player implements Runnable {
 
     @Override
     public void NotifyNinjaAgreement() {
+        if (!this.hand.isEmpty()) {
+            int card = Collections.min(this.hand);
+            this.theMindGame.Play(this.AuthToken, card);
+        }
         int ninjaCards = Server.gameController.GetGameByName(this.gameName).GetNinjaCards();
         String message = "1 ninja card used." +
                 "\nninja card number: " + ninjaCards;

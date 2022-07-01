@@ -55,7 +55,7 @@ public class GameController extends GameObserver implements IGameController {
             return "Invalid Host";
         if(capacity < 2 || capacity >8)
             return "Invalid Capacity";
-        game = new TheMindGame(gameName,this,host,capacity);
+        game = new TheMindGame(gameName,this,host,capacity,this.logger);
         this.games.add(game);
         game.AddObserver(this);
         return "Success";

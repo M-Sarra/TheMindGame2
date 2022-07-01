@@ -39,7 +39,7 @@ public class MessageTransmitter {
             message =  in.nextLine();
         } catch (Exception e) {
             this.time++;
-            if (time > 100) {
+            if (time < 600) {
                 timer.schedule(new TimerTask() {
                     @Override
                     public void run() {
