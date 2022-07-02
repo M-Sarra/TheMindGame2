@@ -8,10 +8,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.security.SecureRandom;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 public class ClientManagerServerSide extends Player implements Runnable {
     private final Socket socket;
@@ -40,12 +37,24 @@ public class ClientManagerServerSide extends Player implements Runnable {
         this.gameName = game;
     }
 
+    public String returnName() {
+        return this.name;
+    }
+
+    public MessageTransmitter getTransmitter() {
+        return this.transmitter;
+    }
+
     public void setHost(boolean host) {
         isHost = host;
     }
 
     public void setTheMindGame(TheMindGame theMindGame) {
         this.theMindGame = theMindGame;
+    }
+
+    public TheMindGame getTheMindGame() {
+        return this.theMindGame;
     }
 
     @Override
@@ -142,8 +151,8 @@ public class ClientManagerServerSide extends Player implements Runnable {
         message = "Game started" +
                 "\nGame name: " + this.gameName +
                 "\nlevel card: 1" +
-                "\nheart cards: " + this.theMindGame.getHeartNumber() +
-                "\nninja cards: 2" +
+                "  heart cards: " + this.theMindGame.getHeartNumber() +
+                "  ninja cards: 2" +
                 "\nPlayers' name: " +
                 this.theMindGame.getPlayersName().toString();
 
@@ -211,20 +220,21 @@ public class ClientManagerServerSide extends Player implements Runnable {
     public void NotifyPlaysCard(String player, Integer card) {
         if (this.hand.contains(card))
             hand.remove(card);
-        List<Integer> removedCards = new ArrayList<>();
+        TreeSet<Integer> removedCards = new TreeSet<>();
         for (int cardNumber : this.hand) {
             if (card > cardNumber) {
                 removedCards.add(cardNumber);
-                this.theMindGame.Play(this.AuthToken, cardNumber);
             }
         }
-        if (!removedCards.isEmpty()) this.hand.removeAll(removedCards);
+        for (int cardNumber : removedCards) {
+            this.theMindGame.Play(this.AuthToken, cardNumber);
+        }
 
         String message = "player " + player + " played with card " + card +
                 "\nlast played card: " + card +
-                "\nlevel card: " + this.level +
-                "\nheart cards: " + Server.gameController.GetGameByName(this.gameName).getHeartNumber() +
-                "\nninja cards: " + Server.gameController.GetGameByName(this.gameName).GetNinjaCards();
+                "  level card: " + this.level +
+                "  heart cards: " + this.theMindGame.getHeartNumber() +
+                "  ninja cards: " + this.theMindGame.GetNinjaCards();
         transmitter.sendMessage(message);
 
         sendHand();
@@ -233,7 +243,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
 
     @Override
     public void NotifyNinjaPropose(String player) {
-        //TODO
+        this.transmitter.sendMessage("Player " + player + " proposed ninja card.");
     }
 
     @Override
@@ -301,14 +311,17 @@ public class ClientManagerServerSide extends Player implements Runnable {
         protected void sendMessageToOtherClient(String message) {
             try {
                 String name = message.split(" ")[3];
-                List<String> names =Server.gameController.GetGameByName(gameName).getPlayersName();
+                if (name.charAt(name.length() - 1) == ':') {
+                    name = name.substring(0, name.length() - 1);
+                }
+                List<String> names = this.client.getTheMindGame().getPlayersName();
                 if (!names.contains(name)) return;
                 String emoji = message.split(" ")[4];
                 if (emoji.equals(":D") || emoji.equals("):") || emoji.equals("|:")) {
                     for (ClientManagerServerSide client : Server.clientManagers) {
-                        if (client.name.equals(name)) {
-                            client.transmitter.sendMessage
-                                    ("message from " + this.client.name + ": " + emoji);
+                        if (client.returnName().equals(name)) {
+                            client.getTransmitter().sendMessage
+                                    ("message from " + this.client.returnName() + ": " + emoji);
                         }
                     }
                 }

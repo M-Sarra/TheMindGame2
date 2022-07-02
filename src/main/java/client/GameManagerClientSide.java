@@ -1,7 +1,6 @@
 package client;
 
 import client.UI.ConsoleManager;
-import server.Server;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -18,7 +17,7 @@ public class GameManagerClientSide {
     private TimeStatus timeStatus;
     private int level;
     private List<Integer> hand;
-    private Socket socket;
+    private final Socket socket;
 
     public GameManagerClientSide(Socket socket, Client client) {
         this.socket = socket;
