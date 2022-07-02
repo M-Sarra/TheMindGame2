@@ -1,9 +1,8 @@
 package client;
 
-import server.logic.GameStatus;
-import server.logic.model.IGamePanel;
-import server.logic.model.Player;
-import server.logic.model.PlayerInfo;
+import common.model.GameStatus;
+import common.model.IGamePanel;
+import common.model.Player;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -19,7 +18,7 @@ public class RemoteGamePanel implements IGamePanel,IMessageListener {
     private GameStatus status;
     private int ninjaCards;
     private Integer lastPlayedCard;
-    private int countOfUnplayedCards;
+    private int countOfNotPlayedCards;
 private Player player;
     public RemoteGamePanel(Player player)
     {
@@ -27,7 +26,7 @@ private Player player;
         this.ninjaCards = 2;
     }
 
-    public void SetMessenger(IMessenger messenger)
+    public void setMessenger(IMessenger messenger)
     {
         this.transmitter = messenger;
     }
@@ -89,37 +88,48 @@ private Player player;
     }
 
     @Override
-    public int GetNinjaCards() {
+    public int getNinjaCards() {
         this.transmitter.sendMessage("GetNinjaCards");
         return this.ninjaCards;
     }
 
     @Override
-    public String ProposeNinja(String token) {
+    public String proposeNinja(String token) {
         this.transmitter.sendMessage("ProposeNinja");
         return "Sent";
     }
 
     @Override
-    public Integer GetLastPlayedCard() {
+    public Integer getLastPlayedCard() {
         this.transmitter.sendMessage("GetLastPlayedCard");
         return this.lastPlayedCard;
     }
 
     @Override
-    public int GetCountOfUnplayedCards() {
-        this.transmitter.sendMessage("GetCountOfUnplayedCards");
-        return this.countOfUnplayedCards;
+    public int getCountOfNotPlayedCards() {
+        this.transmitter.sendMessage("GetCountOfNotPlayedCards");
+        return this.countOfNotPlayedCards;
     }
 
     @Override
-    public String Play(String token, Integer card) {
+    public String play(String token, Integer card) {
         this.transmitter.sendMessage("Play:"+card);
         return "Success";
     }
 
     @Override
     public void listen(String message) {
+        if(message.startsWith("Token:"))
+        {
+            String token = message.substring((int)"Token:".length());
+            this.AuthToken = token;
+            this.player.giveToken(token);
+            return;
+        }
+        if(message.startsWith("JoinResult:"))
+        {
+            return;
+        }
         if(message.startsWith("Status:"))
         {
             this.status = GameStatus.valueOf(message.substring((int)"Status:".length()));
@@ -129,7 +139,7 @@ private Player player;
         {
             String part = message.substring((int)"Give ".length());
             Integer card = Integer.parseInt(part);
-            this.player.GiveCard(card);
+            this.player.giveCard(card);
             return;
         }
         if(message.startsWith("CountOfNinjaCards:"))
@@ -144,10 +154,10 @@ private Player player;
             this.lastPlayedCard = Integer.parseInt(part);
             return;
         }
-        if(message.startsWith("CountOfUnplayedCards:"))
+        if(message.startsWith("CountOfNotPlayedCards:"))
         {
-            String part = message.substring((int)"CountOfUnplayedCards:".length());
-            this.countOfUnplayedCards = Integer.parseInt(part);
+            String part = message.substring((int)"CountOfNotPlayedCards:".length());
+            this.countOfNotPlayedCards = Integer.parseInt(part);
             return;
         }
         if(message.startsWith("Played:"))
@@ -156,25 +166,39 @@ private Player player;
             int index = part.indexOf(' ');
             Integer card = Integer.parseInt(part.substring(0,index));
             String player = part.substring(index+1);
-            this.player.NotifyPlaysCard(player,card);
+            this.player.notifyPlaysCard(player,card);
             return;
         }
         if(message.startsWith("ProposedNinja:"))
         {
             String playerName = message.substring((int)"ProposedNinja:".length());
-            this.player.NotifyNinjaPropose(playerName);
+            this.player.notifyNinjaPropose(playerName);
             return;
         }
         if(message.startsWith("HeartMissed"))
         {
-            this.player.NotifyHeartMissed();
+            this.player.notifyHeartMissed();
             return;
         }
         if(message.startsWith("NinjaAgreement"))
         {
-            this.player.NotifyNinjaAgreement();
+            this.player.notifyNinjaAgreement();
+            return;
+        }
+        if(message.startsWith("Joined:"))
+        {
+            String player = message.substring((int)"Joined:".length());
+            this.player.notifyJoin(player);
             return;
         }
         throw null;
+    }
+
+    public void join(String gameName) {
+        this.sendMessage("JoinTo:"+gameName);
+    }
+
+    public void register() {
+        this.sendMessage("Register:"+this.player.getName());
     }
 }

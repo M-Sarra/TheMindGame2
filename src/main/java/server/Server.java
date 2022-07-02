@@ -2,7 +2,6 @@ package server;
 
 import server.log.Logger;
 import server.logic.GameController;
-import server.logic.GameStatus;
 import server.logic.TheMindGame;
 
 import java.io.FileInputStream;
@@ -46,7 +45,7 @@ public class Server {
                 if (!game.equals("Game not found!")) {
                     client.setGame(game);
                     client.setHost(false);
-                    client.setTheMindGame(Server.gameController.GetGameByName(game));
+                    client.setTheMindGame(Server.gameController.getGameByName(game));
                 }
             }
         }
@@ -57,14 +56,14 @@ public class Server {
         String gameName = "default";
         do {
             gameName = String.valueOf(random.nextInt());
-        } while (gameController.GetGames().contains(gameName));
+        } while (gameController.getGames().contains(gameName));
         return gameName;
     }
 
     private static String returnAnExistingGame() {
-        for (String gameName : gameController.GetGames()) {
-            TheMindGame game = gameController.GetGameByName(gameName);
-            if (game.IsJoinable()) {
+        for (String gameName : gameController.getGames()) {
+            TheMindGame game = gameController.getGameByName(gameName);
+            if (game.isJoinable()) {
 
                     return gameName;
 

@@ -1,8 +1,8 @@
 package server;
 
-import server.logic.GameStatus;
+import common.model.GameStatus;
 import server.logic.TheMindGame;
-import server.logic.model.Player;
+import common.model.Player;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -59,7 +59,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
 
     @Override
     public void run() {
-        getName();
+        setName();
         Server.joinToGame(this);
         getPlayerNumber();
         registerAndGetToken();
@@ -84,7 +84,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
         return answer;
     }
 
-    private void getName() {
+    private void setName() {
         try {
             String message = transmitter.getMessage();
             if (message.contains("name"))
@@ -112,13 +112,13 @@ public class ClientManagerServerSide extends Player implements Runnable {
 
     private void createNewGame() {
         this.gameName = Server.createGameName();
-        Server.gameController.CreateNewGame(this.AuthToken, this.gameName, this.playerNumber);
-        this.theMindGame = Server.gameController.GetGameByName(this.gameName);
+        Server.gameController.createNewGame(this.AuthToken, this.gameName, this.playerNumber);
+        this.theMindGame = Server.gameController.getGameByName(this.gameName);
     }
 
     protected void addPlayerToGame() {
         boolean joinToGameResult = true;
-        String result = Server.gameController.Join(this.AuthToken, this.gameName);
+        String result = Server.gameController.join(this.AuthToken, this.gameName);
         if (result.equals("Game is full")) {
             this.isHost = true;
             createNewGame();
@@ -128,7 +128,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
     }
 
     private void registerAndGetToken() {
-       this.AuthToken = Server.gameController.Register(this);
+       this.AuthToken = Server.gameController.register(this);
         Server.logger.log("New player's name: " + this.name + " Auth token: " + this.AuthToken);
     }
 
@@ -139,7 +139,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
             String message = transmitter.getMessage();
             if (!message.split(" ")[0].equals(this.AuthToken)) getStartOrder();
             if (message.split(" ")[1].equals("start")) {
-                Thread thread = new Thread(() -> Server.gameController.StartGame(token, gameName));
+                Thread thread = new Thread(() -> Server.gameController.startGame(token, gameName));
                 thread.start();
             }
             else getStartOrder();
@@ -168,7 +168,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
                     int cardNumber = Integer.parseInt(message.split(" ")[2]);
                     if (!this.hand.contains(cardNumber) &&
                             Collections.min(this.hand) != cardNumber) return;
-                    Server.gameController.GetGameByName(this.gameName).Play(this.AuthToken, cardNumber);
+                    Server.gameController.getGameByName(this.gameName).play(this.AuthToken, cardNumber);
                 } catch (Exception ignored) {}
             }
             else if (message.contains("message")) {
@@ -183,11 +183,11 @@ public class ClientManagerServerSide extends Player implements Runnable {
     }
 
     private void useNinjaCard() {
-        theMindGame.ProposeNinja(this.AuthToken);
+        theMindGame.proposeNinja(this.AuthToken);
     }
 
     @Override
-    public void StatusChanged(GameStatus status) {
+    public void statusChanged(GameStatus status) {
         if (this.status == GameStatus.NotStarted) {
             this.status = status;
             this.play = new Thread(this::play);
@@ -208,7 +208,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
                 Server.logger.log("The player connection ended. Auth token: " + this.AuthToken);
             } catch (IOException ignored) {}
             if (this.isHost) {
-                Server.gameController.GetGames().remove(this.gameName);
+                Server.gameController.getGames().remove(this.gameName);
                 if (this.isHost) {
                     Server.logger.log("Game was removed. Game name: " + this.gameName);
                 }
@@ -217,14 +217,14 @@ public class ClientManagerServerSide extends Player implements Runnable {
     }
 
     @Override
-    public void NotifyPlaysCard(String player, Integer card) {
+    public void notifyPlaysCard(String player, Integer card) {
         if (this.hand.contains(card))
             hand.remove(card);
         String message = "player " + player + " played with card " + card +
                 "\nlast played card: " + card +
                 "  level card: " + this.level +
                 "  heart cards: " + this.theMindGame.getHeartNumber() +
-                "  ninja cards: " + this.theMindGame.GetNinjaCards();
+                "  ninja cards: " + this.theMindGame.getNinjaCards();
         transmitter.sendMessage(message);
         sendHand();
 
@@ -236,44 +236,54 @@ public class ClientManagerServerSide extends Player implements Runnable {
             }
         }
         for (int cardNumber : removedCards) {
-            this.theMindGame.Play(this.AuthToken, cardNumber);
+            this.theMindGame.play(this.AuthToken, cardNumber);
         }
 
     }
 
     @Override
-    public void NotifyNinjaPropose(String player) {
+    public void notifyNinjaPropose(String player) {
         this.transmitter.sendMessage("Player " + player + " proposed ninja card.");
     }
 
     @Override
-    public void NotifyNinjaAgreement() {
+    public void notifyNinjaAgreement() {
         if (!this.hand.isEmpty()) {
             int card = Collections.min(this.hand);
-            this.theMindGame.Play(this.AuthToken, card);
+            this.theMindGame.play(this.AuthToken, card);
         }
-        int ninjaCards = Server.gameController.GetGameByName(this.gameName).GetNinjaCards();
+        int ninjaCards = Server.gameController.getGameByName(this.gameName).getNinjaCards();
         String message = "1 ninja card used." +
                 "\nninja card number: " + ninjaCards;
         transmitter.sendMessage(message);
     }
 
     @Override
-    public void NotifyHeartMissed() {
+    public void notifyHeartMissed() {
         transmitter.sendMessage("1 heart missed. Heart card number: " +
-                Server.gameController.GetGameByName(this.gameName).getHeartNumber());
+                Server.gameController.getGameByName(this.gameName).getHeartNumber());
     }
 
     @Override
-    public String GetName() {
+    public void notifyJoin(String player) {
+
+    }
+
+    @Override
+    public String getName() {
         return this.name;
     }
 
     @Override
-    public void GiveCard(Integer card) {
+    public void giveCard(Integer card) {
         if (this.hand.isEmpty()) this.level++;
         this.hand.add(card);
         this.transmitter.sendMessage("card: " + card + " level: " + this.level);
+    }
+
+    @Override
+    public void giveToken(String token) {
+        this.AuthToken = token;
     }
 
     class MessageTransmitter {

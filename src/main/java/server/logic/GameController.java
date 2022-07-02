@@ -1,10 +1,7 @@
 package server.logic;
 
-import client.DirectMessenger;
-import client.Messenger;
-import client.RemoteGamePanel;
 import server.log.ILogger;
-import server.logic.model.*;
+import common.model.*;
 // A Java program for a Serverside
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
@@ -15,12 +12,11 @@ import java.util.List;
 public class GameController extends GameObserver implements IGameController {
     private List<TheMindGame> games;
     private ILogger logger;
-    private  List<PlayerInfo> players;
+    private List<PlayerInfo> players;
     private SecureRandom random;
     private int lastBotIndex;
 
-    public GameController(ILogger logger)
-    {
+    public GameController(ILogger logger) {
         this.lastBotIndex = 0;
         this.logger = logger;
         this.random = new SecureRandom();// SecureRandom.getInstanceStrong();
@@ -28,167 +24,149 @@ public class GameController extends GameObserver implements IGameController {
         this.games = new ArrayList<>();
     }
 
-    private String GetUnusedToken() {
+    private String getUnusedToken() {
         PlayerInfo player;
         String token;
         do {
-            token= String.valueOf(this.random.nextLong());
-            player = GetPlayerByToken(token);
-        }while (player != null);
+            token = String.valueOf(this.random.nextLong());
+            player = getPlayerByToken(token);
+        } while (player != null);
         return token;
     }
 
-    public PlayerInfo GetPlayerByToken(String token) {
-        for (PlayerInfo player: this.players) {
-            if(player.Token.equals(token))
+    public PlayerInfo getPlayerByToken(String token) {
+        for (PlayerInfo player : this.players) {
+            if (player.Token.equals(token))
                 return player;
         }
         return null;
     }
 
     @Override
-    public String CreateNewGame(String hostToken, String gameName,int capacity) {
-        TheMindGame game = GetGameByName(gameName);
+    public String createNewGame(String hostToken, String gameName, int capacity) {
+        TheMindGame game = getGameByName(gameName);
         if (game != null) return "Invalid Name";
-        PlayerInfo host = this.GetPlayerByToken(hostToken);
-        if(host == null)
+        PlayerInfo host = this.getPlayerByToken(hostToken);
+        if (host == null)
             return "Invalid Host";
-        if(capacity < 2 || capacity >8)
+        if (capacity < 2 || capacity > 8)
             return "Invalid Capacity";
-        game = new TheMindGame(gameName,this,host,capacity,this.logger);
+        game = new TheMindGame(gameName, this, host, capacity, this.logger);
         this.games.add(game);
-        game.AddObserver(this);
+        game.addObserver(this);
         return "Success";
     }
 
-    public TheMindGame GetGameByName(String name) {
+    public TheMindGame getGameByName(String name) {
         for (TheMindGame game : this.games)
-            if(game.Name.equals(name))
+            if (game.getName().equals(name))
                 return game;
         return null;
     }
 
-    public  List<String> GetGames()
-    {
+    public List<String> getGames() {
         List<String> gameNames = new ArrayList<>();
-        for (TheMindGame game:this.games) {
-            gameNames.add(game.Name);
+        for (TheMindGame game : this.games) {
+            gameNames.add(game.getName());
         }
         return gameNames;
     }
 
-
-     String AddBot(BotPlayer bot,TheMindGame game) {
-         String botToken = this.Register(bot);
-         Join(botToken, game.Name);
-         bot.Join(botToken,  game);
-         return "Success";
-     }
-    //Todo: این دیگه قدیمی شد. از اون یکی استفاده کنیم.
-    public String Join1( Player observer,String gameName)
-    {
-        TheMindGame game = this.GetGameByName(gameName);
-        if(game == null)
-            return "Invalid game";
-        GameStatus status = game.getStatus();
-        if(status != GameStatus.NotStarted)
-            return "Invalid connecting time";
-        PlayerInfo player = GetPlayerByName(observer.GetName());
-        if(player != null)
-            return "duplicative name";
-        String token = GetUnusedToken();
-        player = new PlayerInfo(token,observer);
-        this.players.add(player);
-         game.AddPlayer(player);
-        return token;
+    String addBot(BotPlayer bot, TheMindGame game) {
+        String botToken = this.register(bot);
+        join(botToken, game.getName());
+        bot.join(botToken, game);
+        return "Success";
     }
 
     @Override
-    public String Join( String token,String gameName)
-    {
-        TheMindGame game = this.GetGameByName(gameName);
-        if(game == null)
+    public String join(String token, String gameName) {
+        TheMindGame game = this.getGameByName(gameName);
+        if (game == null)
             return "Invalid game";
         GameStatus status = game.getStatus();
-        if(status != GameStatus.NotStarted)
+        if (status != GameStatus.NotStarted)
             return "Invalid connecting time";
-        PlayerInfo player = GetPlayerByToken(token);
-        if(player == null)
+        PlayerInfo player = getPlayerByToken(token);
+        if (player == null)
             return "Invalid token";
-        return game.AddPlayer(player);
+        return game.join(player);
     }
+
     @Override
-    public String Register(Player observer)
-    {
-        PlayerInfo player = GetPlayerByName(observer.GetName());
-        if(player != null)
+    public String register(Player observer) {
+        PlayerInfo player = getPlayerByName(observer.getName());
+        if (player != null)
             return "duplicative name";
-        String token = GetUnusedToken();
-        player = new PlayerInfo(token,observer);
+        String token = getUnusedToken();
+        player = new PlayerInfo(token, observer);
         this.players.add(player);
         return token;
     }
 
-
-    private PlayerInfo GetPlayerByName(String name) {
-        for (PlayerInfo player: this.players) {
-            if(player.Name.equals(name))
+    private PlayerInfo getPlayerByName(String name) {
+        for (PlayerInfo player : this.players) {
+            if (player.Name().equals(name))
                 return player;
         }
         return null;
     }
 
-
-    private void Log(String message) {
-        this.logger.log( "["+ LocalDateTime.now().format(DateTimeFormatter.ISO_TIME)+"] "+message);
+    private void log(String message) {
+        this.logger.log("[" + LocalDateTime.now().format(DateTimeFormatter.ISO_TIME) + "] " + message);
     }
 
-
     @Override
-    public String StartGame(String token,  String gameName) {
-        TheMindGame game = this.GetGameByName(gameName);
-        if(game == null)
+    public String startGame(String token, String gameName) {
+        TheMindGame game = this.getGameByName(gameName);
+        if (game == null)
             return "Invalid game";
         GameStatus status = game.getStatus();
-        if(status != GameStatus.NotStarted && status != GameStatus.GameOver)
+        if (status != GameStatus.NotStarted && status != GameStatus.GameOver)
             return "Invalid time to start";
-        int playerCount = game.GetCountOfPlayers();
-        int count = game.GetCapacity()- game.GetCountOfPlayers();
-        for (int i = 0 ; i < count;i++) {
+        int playerCount = game.getCountOfPlayers();
+        int count = game.getCapacity() - game.getCountOfPlayers();
+        for (int i = 0; i < count; i++) {
             this.lastBotIndex++;
             String name = "Bot" + lastBotIndex;
-            BotPlayer bot = new BotPlayer(name,playerCount);
-            this.AddBot(bot,game);
+            BotPlayer bot = new BotPlayer(name, playerCount);
+            this.addBot(bot, game);
         }
-        game.Start();
+        game.start();
         return "Success";
     }
 
     @Override
-    public void StatusChanged(GameStatus status) {
-        this.Log("Status changed to "+status);
+    public void statusChanged(GameStatus status) {
+        this.log("Status changed to " + status);
     }
 
     @Override
-    public void NotifyPlaysCard(String player, Integer card) {
-        this.Log(player+ " plays "+ card + ".");
+    public void notifyPlaysCard(String player, Integer card) {
+        this.log(player + " plays " + card + ".");
     }
 
     @Override
-    public void NotifyNinjaPropose(String player) {
-        this.Log(player + " proposes Ninja.");
-    }
-    @Override
-    public void NotifyNinjaAgreement() {
-        this.Log( "Ninja Agreement.");
+    public void notifyNinjaPropose(String player) {
+        this.log(player + " proposes Ninja.");
     }
 
     @Override
-    public void NotifyHeartMissed() {
-        this.Log("Heart missed.");
+    public void notifyNinjaAgreement() {
+        this.log("Ninja Agreement.");
     }
 
-    public  boolean IsOpen() {
+    @Override
+    public void notifyHeartMissed() {
+        this.log("Heart missed.");
+    }
+
+    @Override
+    public void notifyJoin(String player) {
+        this.log(player + " joined.");
+    }
+
+    public boolean isOpen() {
         for (TheMindGame game : this.games) {
             GameStatus status = game.getStatus();
             if (status != GameStatus.GameOver)
@@ -197,72 +175,47 @@ public class GameController extends GameObserver implements IGameController {
         return false;
     }
 
-
-    //TODO : to check if there is a 'notStarted' game between games
-    public boolean isOpen() {
-        for (TheMindGame game : this.games) {
-            if (game.getStatus() == GameStatus.NotStarted)
-                return true;
-        }
-        return false;
-    }
-
-    //TODO : Return an existing game
-    //Todo: بجای این متد از متدهای زیر استفاده کن
-    //GetGames, GetGameByName, TheMindGame.getStatus
-    public String joinAnExistingGame() {
-        for (TheMindGame game : this.games) {
-            if (game.getStatus() == GameStatus.NotStarted) {
-                return game.Name;
-            }
-        }
-        return "Game not found!";
-    }
-
-    public  List<String> GetJoinableGames()
-    {
+    public List<String> getJoinableGames() {
         List<String> names = new ArrayList();
         for (TheMindGame game : this.games) {
-            if (game.IsJoinable()) {
-                names.add( game.Name);
+            if (game.isJoinable()) {
+                names.add(game.getName());
             }
         }
         return names;
     }
 
-    public String JoinToAvailableGame(String token)
-    {
+    public String joinToAvailableGame(String token) {
         for (TheMindGame game : this.games) {
-            if (game.IsJoinable()) {
-                 String result =  this.Join(token,game.Name);
-                 if(result.equals("Success"))
-                     return game.Name;
-                 return result;
+            if (game.isJoinable()) {
+                String result = this.join(token, game.getName());
+                if (result.equals("Success"))
+                    return game.getName();
+                return result;
             }
         }
-        PlayerInfo player = this.GetPlayerByToken(token);
-        if(player == null)
+        PlayerInfo player = this.getPlayerByToken(token);
+        if (player == null)
             return "Invalid Player";
-        String gameName = player.Name+"Game";
-        String result = CreateNewGame(token,gameName,4);
-        if(result.equals("Success"))
+        String gameName = player.Name() + "Game";
+        String result = createNewGame(token, gameName, 4);
+        if (result.equals("Success"))
             return gameName;
         return result;
     }
 
-    public String RemoveGame(String token,String gameName)
-    {
-        PlayerInfo player = this.GetPlayerByToken(token);
-        if(player == null)
+    public String removeGame(String token, String gameName) {
+        PlayerInfo player = this.getPlayerByToken(token);
+        if (player == null)
             return "Invalid User";
-        TheMindGame game = this.GetGameByName(gameName);
-        if(game == null)
+        TheMindGame game = this.getGameByName(gameName);
+        if (game == null)
             return "Invalid Game";
-        if(game.GetHostName().compareTo(player.Name) != 0)
+        if (game.getHostName().compareTo(player.Name()) != 0)
             return "Player is not host.";
         GameStatus status = game.getStatus();
-        if(status != GameStatus.GameOver)
-            game.Stop();
+        if (status != GameStatus.GameOver)
+            game.stop();
         this.games.remove(game);
         return "Success";
     }

@@ -1,36 +1,36 @@
 package server.logic;
 
+import common.model.GameStatus;
 import server.log.ILogger;
-import server.logic.model.GameObserver;
-import server.logic.model.IGamePanel;
-import server.logic.model.PlayerInfo;
+import common.model.GameObserver;
+import common.model.IGamePanel;
+import common.model.PlayerInfo;
 
 import java.security.*;
 import java.util.*;
 
 public class TheMindGame implements IGamePanel {
-    public String Name;
+    private String name;
     private GameController controller;
     private GameStatus status;
     private int level;
     private List<PlayerInfo> players;
     private List<GameObserver> observers;
     private List<Integer> usedCards;
-    private  int heartCards;
+    private int heartCards;
     private int ninjaCards;
     private Integer lastPlayedCard;
-    private Integer worngCard;
+    private Integer wrongCard;
     private SecureRandom random;
     private PlayerInfo host;
     private int capacity;
     private ILogger logger;
 
-    public TheMindGame(String name,GameController controller,PlayerInfo host,int capacity,ILogger logger)
-    {
+    public TheMindGame(String name, GameController controller, PlayerInfo host, int capacity, ILogger logger) {
         this.logger = logger;
         this.host = host;
         this.capacity = capacity;
-        this.Name = name;
+        this.name = name;
         this.controller = controller;
         this.heartCards = 0;
         this.level = 0;
@@ -40,198 +40,235 @@ public class TheMindGame implements IGamePanel {
         this.players = new ArrayList<>();
         this.observers = new ArrayList<>();
     }
-    public  int GetCapacity()
-    {
+
+    public int getCapacity() {
         return this.capacity;
     }
 
-    public String GetHostName()
-    {
-        return this.host.Name;
+    public String getHostName() {
+        return this.host.Name();
     }
 
-    public  void  AddObserver(GameObserver observer)
-    {
-        this.observers.add(observer);
+    public void addObserver(GameObserver observer) {
+        synchronized (this.observers) {
+            this.observers.add(observer);
+        }
     }
 
-    public String Start()
-    {
-        if(this.status != GameStatus.NotStarted)
-            return "Game is "+this.status;
-        this.ChangeStatus(GameStatus.Starting);
-        this.DealHeartCards();
+    public String start() {
+        if (this.status != GameStatus.NotStarted)
+            return "Game is " + this.status;
+        this.changeStatus(GameStatus.Starting);
+        this.dealHeartCards();
         this.ninjaCards = 2;
-        this.ResetNinjas();
-        ChangeLevel(1);
+        this.resetNinjas();
+        changeLevel(1);
         return "Success";
     }
 
-    private void ChangeLevel(int level) {
-        if(level > 12) {
-            this.ChangeStatus(GameStatus.Win);
-            this.ChangeStatus(GameStatus.GameOver);
+    private void changeLevel(int level) {
+        if (level > 12) {
+            this.changeStatus(GameStatus.Win);
+            this.changeStatus(GameStatus.GameOver);
             return;
         }
-        this.ChangeStatus(GameStatus.Dealing);
+        this.changeStatus(GameStatus.Dealing);
         this.level = level;
         this.lastPlayedCard = 0;
-        this.worngCard = 0;
+        this.wrongCard = 0;
         this.usedCards.clear();
-        this.Deal();
-        this.ChangeStatus(GameStatus.Playing);
+        this.deal();
+        this.changeStatus(GameStatus.Playing);
     }
 
-    private void DealHeartCards() {
-        int count = (int)this.players.stream().count();
+    private void dealHeartCards() {
+        int count = (int) this.players.stream().count();
         this.heartCards = count;
     }
 
-    private void ResetNinjas() {
-        for (PlayerInfo player: this.players) {
+    private void resetNinjas() {
+        for (PlayerInfo player : this.players) {
             player.ProposesNinjaCard = false;
         }
     }
-    private void ForceToPlay() {
-        for (PlayerInfo player:this.players) {
-            if(player.hand.stream().count() > 0)
+
+    private void forceToPlay() {
+        for (PlayerInfo player : this.players) {
+            if (player.hand.stream().count() > 0)
                 player.ForceToPlay1 = true;
         }
     }
 
-    private void Deal() {
-        try
-        {
+    private void deal() {
+        try {
             Thread.sleep(3000);
+        } catch (Exception ex) {
         }
-        catch (Exception ex)
-        {}
-        for (PlayerInfo player:this.players) {
-            for (int i = 0 ; i < this.level;i++) {
-                int cardNumber = this.GetUnusedRandomCard();
+        for (PlayerInfo player : this.players) {
+            for (int i = 0; i < this.level; i++) {
+                int cardNumber = this.getUnusedRandomCard();
                 this.usedCards.add(cardNumber);
                 player.GiveCard(cardNumber);
             }
         }
     }
 
-    private int GetUnusedRandomCard() {
-        int card ;
+    private int getUnusedRandomCard() {
+        int card;
         do {
-            card = this.random.nextInt(100)+1;
-        }while (this.usedCards.contains(card));
+            card = this.random.nextInt(100) + 1;
+        } while (this.usedCards.contains(card));
         return card;
     }
 
-    private void ChangeStatus(GameStatus newStatus) {
+    private void changeStatus(GameStatus newStatus) {
         this.status = newStatus;
-        this.NotifyChangeStatus(newStatus);
+        this.notifyChangeStatus(newStatus);
     }
 
-    private void NotifyChangeStatus(GameStatus status) {
-        Thread inform = new Thread(()->{
-            for (GameObserver observer:this.observers
+    private void notifyChangeStatus(GameStatus status) {
+        synchronized (this.observers) {
+            for (GameObserver observer : this.observers
             ) {
-                /*Runnable runnable = new Runnable() {
-                    @Override
-                    public void run() {
-
-                    }
-                };*/
-
-                Thread observerInform = new Thread(()->
-
+                Thread observerInform = new Thread(() ->
                 {
                     try {
-                        observer.StatusChanged(status);
+                        observer.statusChanged(status);
                     } catch (Exception ex) {
                         this.logger.log(ex.toString());
                     }
                 });
-
-                observerInform.start();;
+                observerInform.start();
             }
-        });
-        inform.start();
+        }
     }
-    private void NotifyPlayingCard(String player,int card) {
-        Thread inform = new Thread(()->{
-            for (GameObserver observer:this.observers
+
+    private void notifyPlayingCard(String player, int card) {
+        synchronized (this.observers) {
+            for (GameObserver observer : this.observers
             ) {
-                Thread observerInform = new Thread(()-> observer.NotifyPlaysCard(player,card));
-                observerInform.start();;
+                Thread observerInform = new Thread(() ->{
+                    try {
+                        observer.notifyPlaysCard(player, card);
+                    }
+                    catch (Exception ex)
+                    {
+                        this.logger.log(ex.getMessage());
+                    }
+                });
+                observerInform.start();
             }
-        });
-        inform.start();
+        }
     }
 
-    private void NotifyNinjaPropose(String player) {
-        Thread inform = new Thread(()->{
-            for (GameObserver observer:this.observers) {
-                Thread observerInform = new Thread(()-> observer.NotifyNinjaPropose(player));
-                observerInform.start();;
-            }
-        });
-        inform.start();
-    }
-    private void NotifyNinjaAgreement() {
-        Thread inform = new Thread(()->{
-            for (GameObserver observer:this.observers) {
-                Thread observerInform = new Thread(()-> observer.NotifyNinjaAgreement());
-                observerInform.start();;
-            }
-        });
-        inform.start();
-    }
-    private void NotifyHeartMissed() {
-        Thread inform = new Thread(()->{
-            for (GameObserver observer:this.observers
+    private void notifyJoin(String player) {
+        synchronized (this.observers) {
+            for (GameObserver observer : this.observers
             ) {
-                Thread observerInform = new Thread(()-> observer.NotifyHeartMissed());
-                observerInform.start();;
+                Thread observerInform = new Thread(() ->
+                {
+                    try {
+                        observer.notifyJoin(player);
+                    } catch (Exception ex) {
+                        this.logger.log(ex.getMessage());
+                    }
+                    ;
+                });
+                observerInform.start();
             }
-        });
-        inform.start();
+        }
     }
 
-    public String AddPlayer(PlayerInfo player) {
-        if(this.players.stream().count() >= this.capacity)
+    private void notifyNinjaPropose(String player) {
+        synchronized (this.observers) {
+            for (GameObserver observer : this.observers) {
+                Thread observerInform = new Thread(() -> {
+                    try {
+                        observer.notifyNinjaPropose(player);
+                    } catch (Exception ex) {
+                        this.logger.log(ex.getMessage());
+                    }
+                });
+                observerInform.start();
+            }
+        }
+    }
+
+    private void notifyNinjaAgreement() {
+        synchronized (this.observers) {
+            for (GameObserver observer : this.observers) {
+                Thread observerInform = new Thread(() -> {
+                    try {
+                        observer.notifyNinjaAgreement();
+                    }
+                    catch (Exception ex)
+                    {
+                        this.logger.log(ex.getMessage());
+                    }
+                    });
+                observerInform.start();
+            }
+        }
+    }
+
+    private void notifyHeartMissed() {
+        synchronized (this.observers) {
+            for (GameObserver observer : this.observers
+            ) {
+                Thread observerInform = new Thread(() ->
+                {
+                    try {
+                        observer.notifyHeartMissed();
+                    }catch (Exception ex)
+                    {
+                        this.logger.log(ex.getMessage());
+                    }
+                });
+                observerInform.start();
+                ;
+            }
+        }
+    }
+
+    public String join(PlayerInfo player) {
+        if (this.players.stream().count() >= this.capacity)
             return "Game is full";
-        for (PlayerInfo info:this.players) {
-            if(info.Token.compareTo(player.Token)== 0)
+        for (PlayerInfo info : this.players) {
+            if (info.Token.compareTo(player.Token) == 0)
                 return "Duplicate Player";
         }
         this.players.add(player);
-        this.observers.add(player.player);
+        synchronized (this.observers) {
+            this.observers.add(player.player);
+        }
+        this.notifyJoin(player.Name());
         return "Success";
     }
 
-    public  String ProposeNinja(String token)
-    {
+    public String proposeNinja(String token) {
         synchronized (this) {
             if (this.status != GameStatus.Playing)
                 return "Invalid action";
-            PlayerInfo player = this.controller.GetPlayerByToken(token);
+            PlayerInfo player = this.controller.getPlayerByToken(token);
             if (player == null)
                 return "Invalid player";
             if (this.ninjaCards <= 0)
                 return "No Ninja card";
             player.ProposesNinjaCard = true;
-            NotifyNinjaPropose(player.Name);
-            if(IsNinjaAgreement())
-            {
-                NotifyNinjaAgreement();
+            notifyNinjaPropose(player.Name());
+            if (isNinjaAgreement()) {
+                notifyNinjaAgreement();
                 this.ninjaCards--;
-                this.ForceToPlay();
+                this.forceToPlay();
             }
             //this.ChangeStatus(GameStatus.NinjaPlayed);
             return "Success";
         }
     }
 
-    private boolean IsNinjaAgreement() {
-        for (PlayerInfo player:this.players             ) {
-            if(!player.ProposesNinjaCard)
+    private boolean isNinjaAgreement() {
+        for (PlayerInfo player : this.players) {
+            if (!player.ProposesNinjaCard)
                 return false;
 
         }
@@ -239,101 +276,100 @@ public class TheMindGame implements IGamePanel {
     }
 
     @Override
-    public String Play(String token, Integer card) {
+    public String play(String token, Integer card) {
         synchronized (this) {
             if (this.status != GameStatus.Playing)
                 return "Invalid action";
-            PlayerInfo player = this.controller.GetPlayerByToken(token);
+            PlayerInfo player = this.controller.getPlayerByToken(token);
             if (player == null)
                 return "Invalid player";
             if (!player.hand.contains(card))
                 return "Invalid Card";
-            NotifyPlayingCard(player.Name, card);
+            notifyPlayingCard(player.Name(), card);
             this.usedCards.remove(card);
             if (!player.ForceToPlay1) {
-                if (card < this.lastPlayedCard && card > this.worngCard) {
-                    this.MissHeart();
-                    this.worngCard = this.lastPlayedCard;
+                if (card < this.lastPlayedCard && card > this.wrongCard) {
+                    this.missHeart();
+                    this.wrongCard = this.lastPlayedCard;
                 }
                 this.lastPlayedCard = card;
             }
             if (this.status == GameStatus.GameOver)
                 return "Game Over";
             if (this.usedCards.stream().count() <= 0)
-                this.ChangeLevel(this.level + 1);
+                this.changeLevel(this.level + 1);
             player.ForceToPlay1 = false;
-            this.ResetNinjas();
+            this.resetNinjas();
             return "Success";
         }
     }
 
-    private void MissHeart() {
-        this.heartCards --;
-        this.NotifyHeartMissed();
-        if(this.heartCards == 0) {
-            this.ChangeStatus(GameStatus.Lost);
-            this.ChangeStatus(GameStatus.GameOver);
+    private void missHeart() {
+        this.heartCards--;
+        this.notifyHeartMissed();
+        if (this.heartCards == 0) {
+            this.changeStatus(GameStatus.Lost);
+            try {
+                Thread.sleep(1000);
+            }
+            catch (Exception ex)
+            {
+                this.logger.log(ex.getMessage());
+            }
+            this.changeStatus(GameStatus.GameOver);
         }
     }
 
-    public Integer GetLastPlayedCard() {
+    public Integer getLastPlayedCard() {
         return this.lastPlayedCard;
 
     }
 
-    public int GetCountOfUnplayedCards() {
-        return (int)this.usedCards.stream().count();
+    public int getCountOfNotPlayedCards() {
+        return (int) this.usedCards.stream().count();
     }
 
     public GameStatus getStatus() {
         return this.status;
     }
 
-    //TODO : to send message to client
     public List<String> getPlayersName() {
         List<String> names = new ArrayList<>();
         for (PlayerInfo player : this.players) {
-            if (!player.Name.contains("Bot")) names.add(player.Name);
+            if (!player.Name().contains("Bot")) names.add(player.Name());
         }
         return names;
     }
 
-    //TODO : send heart number
     public int getHeartNumber() {
         return this.heartCards;
     }
 
-    public  int GetNinjaCards()
-    {
+    public int getNinjaCards() {
         return this.ninjaCards;
     }
 
-    public int GetCountOfPlayers() {
-        return (int)this.players.stream().count();
+    public int getCountOfPlayers() {
+        return (int) this.players.stream().count();
     }
 
-
-    //TODO : set using ninja card result
-    public void setNinjaResult(String token, boolean result) {
-        for (PlayerInfo player : this.players) {
-            if (player.Token.equals(token))
-                player.ProposesNinjaCard = result;
-        }
-    }
-
-    public boolean IsJoinable() {
-        if(status != GameStatus.NotStarted)
+    public boolean isJoinable() {
+        if (status != GameStatus.NotStarted)
             return false;
-        if(this.players.stream().count() >= this.capacity)
+        if (this.players.stream().count() >= this.capacity)
             return false;
         return true;
     }
 
-    public int GetLevel() {
+    public int getLevel() {
         return this.level;
     }
 
-    public void Stop() {
-        this.ChangeStatus(GameStatus.Stoped);
+    public void stop() {
+        this.changeStatus(GameStatus.Stoped);
+    }
+
+    public String getName() {
+        return this.name;
     }
 }

@@ -1,8 +1,9 @@
 package server;
 
-import server.logic.GameStatus;
+import common.ISocketListener;
+import common.model.GameStatus;
 import server.logic.TheMindGame;
-import server.logic.model.Player;
+import common.model.Player;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -16,7 +17,7 @@ import java.util.Scanner;
 public class ClientAgent extends Player implements ISocketListener {
     private String name;
     private String AuthToken;
-    public MessageTransmitter transmitter;
+    private MessageTransmitter transmitter;
     private boolean decisionTime1 = false;
     private String gameName;
     private List<Integer> hand;
@@ -46,25 +47,25 @@ public class ClientAgent extends Player implements ISocketListener {
 
     //@Override
     public void run() {
-        getName();
+        setName();
         Server.joinToGame(this);
         if (false){//isHost) {
             this.gameName = Server.createGameName();
             //Todo: Take from message
             int capacity = 4;
-            String result = Server.gameController.CreateNewGame(this.AuthToken, this.gameName, capacity);
+            String result = Server.CreateNewGame(this.AuthToken, this.gameName, capacity);
             if (result.equals("Success")) {
-                Server.logger.log("New game created. gameName: " + this.gameName +
+                Server.getLogger().log("New game created. gameName: " + this.gameName +
                         " Game capacity: " + capacity);
             }
-            this.theMindGame = Server.gameController.GetGameByName(this.gameName);
+            this.theMindGame = Server.GetGameByName(this.gameName);
             addPlayerToGame();
         }
         transmitter.sendMessage("AuthToken: " + AuthToken);
         getStartOrder();
     }
 
-    private void getName() {
+    private void setName() {
         try {
             String message = transmitter.getMessage();
             if (message.contains("name"))
@@ -73,15 +74,15 @@ public class ClientAgent extends Player implements ISocketListener {
             SecureRandom random = new SecureRandom();
             name = String.valueOf(random.nextInt());
         }
-        Server.logger.log("New player's name: " + this.name + " Auth token: " + this.AuthToken);
+        Server.getLogger().log("New player's name: " + this.name + " Auth token: " + this.AuthToken);
     }
 
     protected void addPlayerToGame() {
-        Server.gameController.Join(this.AuthToken, this.gameName);
+        Server.getGameController().join(this.AuthToken, this.gameName);
     }
 
     private void registerAndGetToken() {
-       this.AuthToken = Server.gameController.Register(this);
+       this.AuthToken = Server.getGameController().register(this);
     }
 
     private void getStartOrder() {
@@ -91,41 +92,11 @@ public class ClientAgent extends Player implements ISocketListener {
             String message = transmitter.getMessage();
             if (!message.split(" ")[0].equals(this.AuthToken)) getStartOrder();
             if (message.split(" ")[1].equals("start")) {
-                Server.logger.log("Game with name " + this.gameName + " started.");
-                Thread thread = new Thread(() -> Server.gameController.StartGame(token, gameName));
+                Server.getLogger().log("Game with name " + this.gameName + " started.");
+                Thread thread = new Thread(() -> this. Server.getGameController().startGame(token, gameName));
                 thread.start();
             }
             else getStartOrder();
-        }
-    }
-
-    public void play1() {
-        String message;
-        message = "Game started" +
-                "\nGame name: " + this.gameName +
-                "\nlevel card: 1" +
-                "\nheart cards: " + Server.gameController.GetGameByName(this.gameName).getHeartNumber() +
-                "\nninja cards: 2" +
-                "\nPlayer's: " +
-                Server.gameController.GetGameByName(this.gameName).getPlayersName().toString();
-        transmitter.sendMessage(message);
-
-        while (this.status1 != GameStatus.GameOver || this.status1 != GameStatus.Win) {
-            message = transmitter.getMessage();
-            if (message.equals("Could not get message!!")) continue;
-            if (!message.split(" ")[0].equals(this.AuthToken)) continue;
-            if (message.split(" ")[1].equals("0")) useNinjaCard();
-            if (message.contains("cardNumber")) {
-                try {
-                    int cardNumber = Integer.parseInt(message.split(" ")[2]);
-                    if (!this.hand.contains(cardNumber) &&
-                            Collections.min(this.hand) != cardNumber) return;
-                    Server.gameController.GetGameByName(this.gameName).Play(this.AuthToken, cardNumber);
-                } catch (Exception ignored) {}
-            }
-            else if (message.contains("message")) {
-                Server.sendMessageToOtherClient(this.name,this.gameName,message);
-            }
         }
     }
 
@@ -134,17 +105,13 @@ public class ClientAgent extends Player implements ISocketListener {
         transmitter.sendMessage(message);
     }
 
-    private void useNinjaCard() {
-        theMindGame.ProposeNinja(this.AuthToken);
-    }
-
     @Override
-    public void StatusChanged(GameStatus status) {
+    public void statusChanged(GameStatus status) {
         this.transmitter.sendMessage("Status="+status);
     }
 
     @Override
-    public void NotifyPlaysCard(String player, Integer card) {
+    public void notifyPlaysCard(String player, Integer card) {
         if (this.hand.contains(card))
             hand.remove(card);
         if (card > Collections.min(this.hand)) {
@@ -156,52 +123,60 @@ public class ClientAgent extends Player implements ISocketListener {
         }
         String message = "player " + player + " played with card " + card +
                 "\nlast played card: " + card +
-                "\nlevel card: " + this.theMindGame.GetLevel() +
-                "\nheart cards: " + Server.gameController.GetGameByName(this.gameName).getHeartNumber() +
-                "\nninja cards: " + Server.gameController.GetGameByName(this.gameName).GetNinjaCards();
+                "\nlevel card: " + this.theMindGame.getLevel() +
+                "\nheart cards: " + this.theMindGame.getHeartNumber() +
+                "\nninja cards: " + this.theMindGame.getNinjaCards();
         transmitter.sendMessage(message);
         sendHand();
     }
 
     @Override
-    public void NotifyNinjaPropose(String player) {
-        //TODO
+    public void notifyNinjaPropose(String player) {
     }
 
     @Override
-    public void NotifyNinjaAgreement() {
-        int ninjaCards = Server.gameController.GetGameByName(this.gameName).GetNinjaCards();
+    public void notifyNinjaAgreement() {
+        int ninjaCards = this.theMindGame.getNinjaCards();
         String message = "1 ninja card used." +
                 "\nninja card number: " + ninjaCards;
         transmitter.sendMessage(message);
     }
 
     @Override
-    public void NotifyHeartMissed() {
+    public void notifyHeartMissed() {
         transmitter.sendMessage("1 heart missed. Heart card number: " +
-                Server.gameController.GetGameByName(this.gameName).getHeartNumber());
+                this.theMindGame.getHeartNumber());
     }
 
     @Override
-    public String GetName() {
+    public void notifyJoin(String player) {
+
+    }
+
+    @Override
+    public String getName() {
         return this.name;
     }
 
     @Override
-    public void GiveCard(Integer card) {
+    public void giveCard(Integer card) {
         this.transmitter.sendMessage("D="+card);
     }
 
     @Override
-    public void Disconnected() {
-        this.play.interrupt();
-        Server.remove(this);
-        Server.logger.log("Connection is lost!! player's token: " + this.AuthToken);
+    public void giveToken(String token) {
+        this.AuthToken = token;
     }
 
     @Override
-    public void MessageRecived(String message) {
-        //Todo: Fateme
+    public void disconnected() {
+        this.play.interrupt();
+        Server.remove(this);
+        Server.getLogger().log("Connection is lost!! player's token: " + this.AuthToken);
+    }
+
+    @Override
+    public void messageReceived(String message) {
     }
 
     class MessageTransmitter {
@@ -225,13 +200,13 @@ public class ClientAgent extends Player implements ISocketListener {
             String message = "Could not get message!!";
             try {
                 message = this.in.nextLine();
-                this.client.MessageRecived(message);
+                this.client.messageReceived(message);
             } catch (Exception e) {
                 this.time++;
                 if (this.time > 10) {
                     try {
                         this.socket.close();
-                        client.Disconnected();
+                        client.disconnected();
                         return message;
                     } catch (IOException ignored) {}
                 }

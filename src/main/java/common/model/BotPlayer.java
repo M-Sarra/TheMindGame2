@@ -1,7 +1,4 @@
-package server.logic.model;
-
-import server.logic.GameStatus;
-import server.logic.TheMindGame;
+package common.model;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
@@ -25,8 +22,7 @@ public class BotPlayer extends Player {
     private boolean forcePlayCard;
     private boolean ninjaProposed;
 
-    public BotPlayer(String name,int countOfAgreementsToAutoAgree) {
-        //name is not required
+    public BotPlayer(String name, int countOfAgreementsToAutoAgree) {
         this.countOfAgreementsToAutoAgree = countOfAgreementsToAutoAgree;
         this.currentAgreementCount = 0;
         this.ninjaProposed = false;
@@ -39,48 +35,47 @@ public class BotPlayer extends Player {
         this.timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                Play();
+                play();
             }
-        },0,100);
+        }, 0, 100);
     }
-    public void Join(String token, IGamePanel game)
-    {
+
+    public void join(String token, IGamePanel game) {
         this.token = token;
         this.game = game;
     }
 
-    public  void Play() {
-        if(this.game == null)
+    public void play() {
+        if (this.game == null)
             return;
         GameStatus status = this.game.getStatus();
-        if(status == GameStatus.Playing) {
-            if (IsNinjaPropose()) {
+        if (status == GameStatus.Playing) {
+            if (isNinjaPropose()) {
                 this.ninjaProposed = true;
-                this.game.ProposeNinja(this.token);
-            }
-            else {
-                PlayCard();
+                this.game.proposeNinja(this.token);
+            } else {
+                playCard();
             }
         }
     }
 
-    private boolean IsNinjaPropose() {
-        if(this.ninjaProposed)
+    private boolean isNinjaPropose() {
+        if (this.ninjaProposed)
             return false;
-        if(this.forcePlayCard)
+        if (this.forcePlayCard)
             return false;
-        if(this.countOfAgreementsToAutoAgree > 0) {
+        if (this.countOfAgreementsToAutoAgree > 0) {
             if (this.currentAgreementCount >= this.countOfAgreementsToAutoAgree)
                 return true;
             return false;
         }
-        if(this.game.GetNinjaCards()<= 0)
+        if (this.game.getNinjaCards() <= 0)
             return false;
         int r = this.random.nextInt(1000);
         return r < 10;
     }
 
-    private void PlayCard() {
+    private void playCard() {
         boolean playing = this.forcePlayCard;
         this.forcePlayCard = false;
         int count = this.hand.size();
@@ -90,10 +85,10 @@ public class BotPlayer extends Player {
         for (int card : hand)
             if (card < minCard)
                 minCard = card;
-        Integer lastCard = this.game.GetLastPlayedCard();
+        Integer lastCard = this.game.getLastPlayedCard();
         if (minCard < lastCard + 1)
             playing = true;
-        else if (this.game.GetCountOfUnplayedCards() == count)
+        else if (this.game.getCountOfNotPlayedCards() == count)
             playing = true;
         else {
             LocalDateTime playTime = time.plusNanos((this.InitialDelay + (long) minCard * this.DelayForeachCard) * 1000000L);
@@ -104,7 +99,7 @@ public class BotPlayer extends Player {
         }
         if (playing) {
             this.hand.remove(minCard);
-            this.game.Play(this.token, minCard);
+            this.game.play(this.token, minCard);
         }
     }
 
@@ -113,7 +108,7 @@ public class BotPlayer extends Player {
     }
 
     @Override
-    public void StatusChanged(GameStatus status) {
+    public void statusChanged(GameStatus status) {
 
         this.time = LocalDateTime.now();
         this.forcePlayCard = false;
@@ -122,36 +117,42 @@ public class BotPlayer extends Player {
     }
 
     @Override
-    public String GetName() {
+    public String getName() {
         return this.name;
     }
 
     @Override
-    public void GiveCard(Integer card) {
+    public void giveCard(Integer card) {
         this.hand.add(card);
         this.hand.sort(Integer::compareTo);
     }
 
     @Override
-    public void NotifyPlaysCard(String player, Integer card)
-    {
+    public void giveToken(String token) {
+        this.token = token;
+    }
+
+    @Override
+    public void notifyPlaysCard(String player, Integer card) {
         this.ninjaProposed = false;
         this.currentAgreementCount = 0;
     }
 
     @Override
-
-    public void NotifyNinjaPropose(String player) {
+    public void notifyNinjaPropose(String player) {
         this.currentAgreementCount++;
     }
+
     @Override
-    public void NotifyNinjaAgreement() {
+    public void notifyNinjaAgreement() {
         this.forcePlayCard = true;
     }
 
     @Override
-    public void NotifyHeartMissed() {
-
+    public void notifyHeartMissed() {
     }
 
+    @Override
+    public void notifyJoin(String player) {
+    }
 }
