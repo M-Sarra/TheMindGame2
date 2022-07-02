@@ -1,6 +1,6 @@
 package client;
 
-public interface IMessenger extends IMessageListener {
+public interface IMessenger {
 
     void sendMessage(String message);
 }

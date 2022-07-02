@@ -2,9 +2,9 @@ package  server.logic;
 
 import client.DirectMessenger;
 import client.RemoteGamePanel;
+import server.GameServer;
 import server.log.ConsoleLogger;
 import server.logic.model.BotPlayer;
-import server.logic.model.IGameController;
 import server.logic.model.Player;
 
 public class Example {
@@ -53,11 +53,14 @@ public class Example {
             };
             String hostToken = controller.Register(host);
             String gameName = "Default";
-            int count = 5;
+            int count = 6;
             controller.CreateNewGame(hostToken, gameName,count);
-            for (int i = 0 ; i < count;i++) {
-                String name = "Bot" + i;
-                AddBot(controller, name, gameName);
+            GameServer server = new GameServer(controller,new ConsoleLogger());
+            //server.start();
+            for (int i = 0 ; i < 3;i++) {
+                String name = "ClientBot" + i;
+                BotPlayer bot = new BotPlayer(name,-1);
+                AddBot(server,controller, bot, gameName);
             }
 
             controller.StartGame(null,gameName);
@@ -72,12 +75,11 @@ public class Example {
 
     }
 
-    static String AddBot(GameController controller, String name,String gameName) {
+    static String AddBot(GameServer server, GameController controller, BotPlayer bot, String gameName) {
         TheMindGame game = controller.GetGameByName(gameName);
         if (game == null)
             return "Invalid game.";
-        BotPlayer bot = new BotPlayer(name);
-        MessageGamePanel gamePanel = new MessageGamePanel(game,name);
+        MessageGamePanel gamePanel = new MessageGamePanel(game,bot.GetName());
         DirectMessenger gameMessenger = new DirectMessenger(gamePanel);
         gamePanel.SetMessenger1(gameMessenger);
         RemoteGamePanel botPanel = new RemoteGamePanel(bot);
@@ -85,9 +87,10 @@ public class Example {
         gameMessenger.SetAudience(botMessenger);
         botMessenger.SetAudience(gameMessenger);
         botPanel.SetMessenger(botMessenger);
-        String botToken = controller.Join1(gamePanel, gameName);
-        gamePanel.SetToken(botToken);
-        bot.Join(botToken,  game);
+        String playerToken = controller.Register(bot);
+        String result = controller.Join(playerToken, gameName);
+        gamePanel.SetToken(playerToken);
+        bot.Join(playerToken,  game);
         return "Success";
     }
 
