@@ -100,6 +100,12 @@ public class TheMindGame implements IGamePanel {
     }
 
     private void Deal() {
+        try
+        {
+            Thread.sleep(3000);
+        }
+        catch (Exception ex)
+        {}
         for (PlayerInfo player:this.players) {
             for (int i = 0 ; i < this.level;i++) {
                 int cardNumber = this.GetUnusedRandomCard();

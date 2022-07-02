@@ -25,7 +25,6 @@ public class Server {
         clientManagers = new ArrayList<>();
         gameController = new GameController(logger);
     }
-    String temp = "";
 
     public void start() {
         try {

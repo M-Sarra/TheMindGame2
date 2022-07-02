@@ -220,6 +220,15 @@ public class ClientManagerServerSide extends Player implements Runnable {
     public void NotifyPlaysCard(String player, Integer card) {
         if (this.hand.contains(card))
             hand.remove(card);
+        String message = "player " + player + " played with card " + card +
+                "\nlast played card: " + card +
+                "  level card: " + this.level +
+                "  heart cards: " + this.theMindGame.getHeartNumber() +
+                "  ninja cards: " + this.theMindGame.GetNinjaCards();
+        transmitter.sendMessage(message);
+        sendHand();
+
+
         TreeSet<Integer> removedCards = new TreeSet<>();
         for (int cardNumber : this.hand) {
             if (card > cardNumber) {
@@ -229,15 +238,6 @@ public class ClientManagerServerSide extends Player implements Runnable {
         for (int cardNumber : removedCards) {
             this.theMindGame.Play(this.AuthToken, cardNumber);
         }
-
-        String message = "player " + player + " played with card " + card +
-                "\nlast played card: " + card +
-                "  level card: " + this.level +
-                "  heart cards: " + this.theMindGame.getHeartNumber() +
-                "  ninja cards: " + this.theMindGame.GetNinjaCards();
-        transmitter.sendMessage(message);
-
-        sendHand();
 
     }
 
@@ -295,7 +295,6 @@ public class ClientManagerServerSide extends Player implements Runnable {
             String message = "Could not get message!!";
             try {
                 message = this.in.nextLine();
-                System.out.println(message);
             } catch (Exception ignored) {}
             return message;
         }
