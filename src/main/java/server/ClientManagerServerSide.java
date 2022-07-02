@@ -33,6 +33,10 @@ public class ClientManagerServerSide extends Player implements Runnable {
         this.level = 0;
     }
 
+    public Socket getSocket() {
+        return this.socket;
+    }
+
     protected void setGame(String game) {
         this.gameName = game;
     }
