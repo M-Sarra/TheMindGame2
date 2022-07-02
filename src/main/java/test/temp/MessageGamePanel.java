@@ -1,7 +1,5 @@
-package common;
+package test.temp;
 
-import client.IMessageListener;
-import client.IMessenger;
 import common.model.Player;
 import server.logic.GameController;
 import common.model.GameStatus;

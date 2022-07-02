@@ -1,8 +1,9 @@
-package server;
+package test.temp;
 
 import server.log.ILogger;
 import server.logic.GameController;
 import server.logic.TheMindGame;
+import test.temp.ClientAgent;
 
 import java.io.FileInputStream;
 import java.io.IOException;

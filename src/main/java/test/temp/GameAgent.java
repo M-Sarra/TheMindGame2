@@ -1,8 +1,7 @@
-package client;
+package test.temp;
 
 import client.UI.ConsoleManager;
 
-import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 

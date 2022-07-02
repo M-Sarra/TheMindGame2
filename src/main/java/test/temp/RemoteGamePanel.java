@@ -1,4 +1,4 @@
-package client;
+package test.temp;
 
 import common.model.GameStatus;
 import common.model.IGamePanel;
@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.Properties;
 
-public class RemoteGamePanel implements IGamePanel,IMessageListener {
+public class RemoteGamePanel implements IGamePanel, IMessageListener {
     private String host;
     private int port;
     private String name;

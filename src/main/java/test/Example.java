@@ -1,21 +1,21 @@
 package test;
 
-import client.DirectMessenger;
-import client.RemoteGamePanel;
-import server.GameServer;
 import server.log.ConsoleLogger;
 import common.model.BotPlayer;
 import common.model.Player;
 import server.logic.GameController;
 import common.model.GameStatus;
-import common.MessageGamePanel;
+import test.temp.DirectMessenger;
+import test.temp.GameServer;
+import test.temp.MessageGamePanel;
+import test.temp.RemoteGamePanel;
 
 public class Example {
 
     public static void main(String[] args) {
         try {
             GameController controller = new GameController(new ConsoleLogger());
-            String hostToken = null;
+            String hostToken;
             Player host = new Player() {
                 @Override
                 public String getName() {

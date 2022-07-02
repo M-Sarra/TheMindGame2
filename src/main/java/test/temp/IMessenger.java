@@ -1,4 +1,4 @@
-package client;
+package test.temp;
 
 public interface IMessenger {
 

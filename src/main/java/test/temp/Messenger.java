@@ -1,4 +1,4 @@
-package client;
+package test.temp;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -7,7 +7,7 @@ import java.util.Scanner;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class Messenger implements  IMessenger {
+public class Messenger implements IMessenger {
     private final Scanner in;
     private final PrintWriter out;
     private String AuthToken;

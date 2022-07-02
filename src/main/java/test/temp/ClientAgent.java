@@ -1,6 +1,5 @@
-package server;
+package test.temp;
 
-import common.ISocketListener;
 import common.model.GameStatus;
 import server.logic.TheMindGame;
 import common.model.Player;

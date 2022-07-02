@@ -1,6 +1,6 @@
-package client;
+package test.temp;
 
-public class DirectMessenger implements IMessenger,IMessageListener{
+public class DirectMessenger implements IMessenger, IMessageListener {
     private IMessageListener audience;
     private IMessageListener client;
     public DirectMessenger(IMessageListener client) {

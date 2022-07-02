@@ -1,11 +1,11 @@
-package client;
+package test.temp;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Scanner;
 
-public class SocketMessenger implements IMessenger{
+public class SocketMessenger implements IMessenger {
     private Socket audience;
     private IMessageListener client;
     private  Scanner in;

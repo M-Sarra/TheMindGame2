@@ -1,4 +1,4 @@
-package common;
+package test.temp;
 
 public interface ISocketListener {
     void disconnected();
