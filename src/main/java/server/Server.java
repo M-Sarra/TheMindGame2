@@ -31,7 +31,7 @@ public class Server {
         try {
             ServerSocket serverSocket = new ServerSocket(port);
             while (true) {
-                final Socket socket = serverSocket.accept();
+                Socket socket = serverSocket.accept();
                 ClientManagerServerSide clientManager = new ClientManagerServerSide(socket);
                 clientManagers.add(clientManager);
                 logger.log("New client connected...");
