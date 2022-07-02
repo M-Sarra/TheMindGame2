@@ -1,6 +1,7 @@
 package server;
 
 import server.log.ConsoleLogger;
+import server.log.ILogger;
 import server.log.Logger;
 import server.logic.GameController;
 import server.logic.GameStatus;
@@ -15,16 +16,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-public class ServerSide {
+public class GameServer {
     private final int port;
-    private List<ClientAgent> clientManagers;
+    private List<ClientAgent> clients;
     public GameController gameController;
-    public final Logger logger = new Logger("src/main/java/server/log/log");
+    public ILogger logger;// = new Logger("src/main/java/server/log/log");
 
-    public ServerSide() {
+    public GameServer(GameController controller,ILogger logger) {
+        this.logger = logger;
         this.port = setPort();
-        clientManagers = new ArrayList<>();
-        gameController = new GameController(new ConsoleLogger());
+        clients = new ArrayList<>();
+        gameController = controller;
     }
 
     public void start() {
@@ -33,7 +35,7 @@ public class ServerSide {
             while (true) {
                 final Socket socket = serverSocket.accept();
                 ClientAgent clientManager = new ClientAgent(this,socket);
-                clientManagers.add(clientManager);
+                clients.add(clientManager);
                 logger.log("New client connected...");
                 new Thread(()->{clientManager.run();}).start();
             }
@@ -86,7 +88,7 @@ public class ServerSide {
     }
 
     public void remove(ClientAgent clientAgent) {
-        this.clientManagers.remove(clientAgent);
+        this.clients.remove(clientAgent);
     }
 
     protected void sendMessageToOtherClient(String clientName,String gameName, String message) {
@@ -96,7 +98,7 @@ public class ServerSide {
             if (!names.contains(name)) return;
             String emoji = message.split(" ")[4];
             if (emoji.equals(":D") || emoji.equals("):") || emoji.equals("|:")) {
-                for (ClientAgent client : this.clientManagers) {
+                for (ClientAgent client : this.clients) {
                     if (clientName.equals(name)) {
                         client.transmitter.sendMessage
                                 ("message from " + clientName + ": " + emoji);

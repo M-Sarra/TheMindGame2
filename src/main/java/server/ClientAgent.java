@@ -24,9 +24,9 @@ public class ClientAgent extends Player implements ISocketListener {
     private int level1;
     private TheMindGame theMindGame;
     private Thread play;
-    private ServerSide Server;
+    private GameServer Server;
 
-    public ClientAgent(ServerSide server, Socket socket) {
+    public ClientAgent(GameServer server, Socket socket) {
         this.Server = server;
         registerAndGetToken();
         transmitter = new MessageTransmitter(socket, this);

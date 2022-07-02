@@ -19,12 +19,16 @@ public class BotPlayer extends Player {
     private LocalDateTime time;
     private final int DelayForeachCard = 2000;
     private final int InitialDelay = 5000;
+    private final int countOfAgreementsToAutoAgree;
+    private int currentAgreementCount = 0;
     private SecureRandom random;
     private boolean forcePlayCard;
     private boolean ninjaProposed;
 
-    public BotPlayer(String name) {
+    public BotPlayer(String name,int countOfAgreementsToAutoAgree) {
         //name is not required
+        this.countOfAgreementsToAutoAgree = countOfAgreementsToAutoAgree;
+        this.currentAgreementCount = 0;
         this.ninjaProposed = false;
         this.random = new SecureRandom();
         this.forcePlayCard = false;
@@ -50,8 +54,7 @@ public class BotPlayer extends Player {
             return;
         GameStatus status = this.game.getStatus();
         if(status == GameStatus.Playing) {
-            int r = this.random.nextInt(1000);
-            if (!this.forcePlayCard && !this.ninjaProposed && this.game.GetNinjaCards()> 0 && r < 10) {
+            if (IsNinjaPropose()) {
                 this.ninjaProposed = true;
                 this.game.ProposeNinja(this.token);
             }
@@ -59,6 +62,22 @@ public class BotPlayer extends Player {
                 PlayCard();
             }
         }
+    }
+
+    private boolean IsNinjaPropose() {
+        if(this.ninjaProposed)
+            return false;
+        if(this.forcePlayCard)
+            return false;
+        if(this.countOfAgreementsToAutoAgree > 0) {
+            if (this.currentAgreementCount >= this.countOfAgreementsToAutoAgree)
+                return true;
+            return false;
+        }
+        if(this.game.GetNinjaCards()<= 0)
+            return false;
+        int r = this.random.nextInt(1000);
+        return r < 10;
     }
 
     private void PlayCard() {
@@ -95,7 +114,11 @@ public class BotPlayer extends Player {
 
     @Override
     public void StatusChanged(GameStatus status) {
+
         this.time = LocalDateTime.now();
+        this.forcePlayCard = false;
+        this.currentAgreementCount = 0;
+        this.ninjaProposed = false;
     }
 
     @Override
@@ -110,13 +133,16 @@ public class BotPlayer extends Player {
     }
 
     @Override
-    public void NotifyPlaysCard(String player, Integer card) {
+    public void NotifyPlaysCard(String player, Integer card)
+    {
         this.ninjaProposed = false;
+        this.currentAgreementCount = 0;
     }
 
     @Override
 
     public void NotifyNinjaPropose(String player) {
+        this.currentAgreementCount++;
     }
     @Override
     public void NotifyNinjaAgreement() {

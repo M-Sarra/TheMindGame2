@@ -78,12 +78,9 @@ public class GameController extends GameObserver implements IGameController {
     }
 
 
-     String AddBot(String token, String name,String gameName) {
-         TheMindGame game = this.GetGameByName(gameName);
-         if (game == null)
-             return "Invalid game.";
-         BotPlayer bot = new BotPlayer(name);
-         String botToken = Join1(bot, gameName);
+     String AddBot(BotPlayer bot,TheMindGame game) {
+         String botToken = this.Register(bot);
+         Join(botToken, game.Name);
          bot.Join(botToken,  game);
          return "Success";
      }
@@ -155,10 +152,13 @@ public class GameController extends GameObserver implements IGameController {
         GameStatus status = game.getStatus();
         if(status != GameStatus.NotStarted && status != GameStatus.GameOver)
             return "Invalid time to start";
+        int playerCount = game.GetCountOfPlayers();
         int count = game.GetCapacity()- game.GetCountOfPlayers();
         for (int i = 0 ; i < count;i++) {
             this.lastBotIndex++;
-            this.AddBot(token, "Bot" + lastBotIndex, gameName);
+            String name = "Bot" + lastBotIndex;
+            BotPlayer bot = new BotPlayer(name,playerCount);
+            this.AddBot(bot,game);
         }
         game.Start();
         return "Success";

@@ -67,9 +67,4 @@ public class Messenger implements  IMessenger {
         sendMessage(newMessage);
     }
 
-
-    @Override
-    public void listen(String message) {
-
-    }
 }
