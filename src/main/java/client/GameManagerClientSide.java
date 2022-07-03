@@ -146,6 +146,9 @@ public class GameManagerClientSide {
 
                 if (message.equals("Could not get message from server!!")) {
                     consoleManager.sendMessage("The connection to the server was lost!");
+                    try {
+                        this.socket.close();
+                    } catch (IOException ignored) {}
                     System.exit(0);
                 }
 

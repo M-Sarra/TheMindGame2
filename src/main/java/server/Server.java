@@ -18,6 +18,7 @@ public class Server {
     protected static List<ClientManagerServerSide> clientManagers;
     protected static GameController gameController;
     public static final Logger logger = new Logger("src/main/java/server/log/log");
+    private ServerSocket serverSocket;
 
     public Server() {
         this.port = setPort();
@@ -27,7 +28,7 @@ public class Server {
 
     public void start() {
         try {
-            ServerSocket serverSocket = new ServerSocket(port);
+            this.serverSocket = new ServerSocket(port);
             while (true) {
                 Socket socket = serverSocket.accept();
                 ClientManagerServerSide clientManager = new ClientManagerServerSide(socket);
@@ -36,6 +37,16 @@ public class Server {
                 new Thread(clientManager).start();
             }
         } catch (IOException ignored) {}
+        finally {
+            try {
+                this.serverSocket.close();
+                for (ClientManagerServerSide clientManager : clientManagers) {
+                    if (!clientManager.getSocket().isClosed()) {
+                        clientManager.getSocket().close();
+                    }
+                }
+            } catch (IOException ignored) {}
+        }
     }
 
     protected static synchronized void joinToGame(ClientManagerServerSide client) {
