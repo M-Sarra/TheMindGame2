@@ -137,7 +137,7 @@ public class GameController extends GameObserver implements IGameController {
     }
 
     @Override
-    public void statusChanged(GameStatus status) {
+    public void notifyStatusChange(GameStatus status) {
         this.log("Status changed to " + status);
     }
 
@@ -164,6 +164,11 @@ public class GameController extends GameObserver implements IGameController {
     @Override
     public void notifyJoin(String player) {
         this.log(player + " joined.");
+    }
+
+    @Override
+    public void notifyLevelChange(int level) {
+        this.log("Level changed to "+level);
     }
 
     public boolean isOpen() {

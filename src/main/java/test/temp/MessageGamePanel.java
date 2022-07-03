@@ -110,7 +110,7 @@ public class MessageGamePanel extends Player implements IMessageListener {
     }
 
     @Override
-    public void statusChanged(GameStatus status) {
+    public void notifyStatusChange(GameStatus status) {
         this.sendStatus(status);
     }
 
@@ -137,6 +137,11 @@ public class MessageGamePanel extends Player implements IMessageListener {
     @Override
     public void notifyJoin(String player) {
         this.messenger.sendMessage("Joined:" + player);
+    }
+
+    @Override
+    public void notifyLevelChange(int level) {
+
     }
 
     @Override

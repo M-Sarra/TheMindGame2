@@ -105,7 +105,7 @@ public class ClientAgent extends Player implements ISocketListener {
     }
 
     @Override
-    public void statusChanged(GameStatus status) {
+    public void notifyStatusChange(GameStatus status) {
         this.transmitter.sendMessage("Status="+status);
     }
 
@@ -149,6 +149,11 @@ public class ClientAgent extends Player implements ISocketListener {
 
     @Override
     public void notifyJoin(String player) {
+
+    }
+
+    @Override
+    public void notifyLevelChange(int level) {
 
     }
 

@@ -187,7 +187,7 @@ public class ClientManagerServerSide extends Player implements Runnable {
     }
 
     @Override
-    public void statusChanged(GameStatus status) {
+    public void notifyStatusChange(GameStatus status) {
         if (this.status == GameStatus.NotStarted) {
             this.status = status;
             this.play = new Thread(this::play);
@@ -266,6 +266,11 @@ public class ClientManagerServerSide extends Player implements Runnable {
 
     @Override
     public void notifyJoin(String player) {
+
+    }
+
+    @Override
+    public void notifyLevelChange(int level) {
 
     }
 

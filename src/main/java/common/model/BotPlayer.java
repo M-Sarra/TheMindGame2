@@ -14,6 +14,7 @@ public class BotPlayer extends Player {
     private Timer timer;
     private List<Integer> hand;
     private LocalDateTime time;
+    private Integer lastPlayCard;
     private final int DelayForeachCard = 2000;
     private final int InitialDelay = 5000;
     private final int countOfAgreementsToAutoAgree;
@@ -108,7 +109,7 @@ public class BotPlayer extends Player {
     }
 
     @Override
-    public void statusChanged(GameStatus status) {
+    public void notifyStatusChange(GameStatus status) {
 
         this.time = LocalDateTime.now();
         this.forcePlayCard = false;
@@ -154,5 +155,10 @@ public class BotPlayer extends Player {
 
     @Override
     public void notifyJoin(String player) {
+    }
+
+    @Override
+    public void notifyLevelChange(int level) {
+
     }
 }

@@ -62,18 +62,33 @@ public class TheMindGame implements IGamePanel {
         this.dealHeartCards();
         this.ninjaCards = 2;
         this.resetNinjas();
-        changeLevel(1);
+        this.level = 0;
+        changeLevel();
         return "Success";
     }
 
-    private void changeLevel(int level) {
-        if (level > 12) {
+    private void changeLevel() {
+        if (this.level >= 12) {
             this.changeStatus(GameStatus.Win);
             this.changeStatus(GameStatus.GameOver);
             return;
         }
+        this.level++;
+        switch (this.level)
+        {
+            case 3:
+            case 6:
+            case 9:
+                this.heartCards ++;
+                break;
+            case 2:
+            case 5:
+            case 8:
+                this.ninjaCards ++;
+                break;
+        }
+        this.notifyLevelChange();
         this.changeStatus(GameStatus.Dealing);
-        this.level = level;
         this.lastPlayedCard = 0;
         this.wrongCard = 0;
         this.usedCards.clear();
@@ -133,7 +148,24 @@ public class TheMindGame implements IGamePanel {
                 Thread observerInform = new Thread(() ->
                 {
                     try {
-                        observer.statusChanged(status);
+                        observer.notifyStatusChange(status);
+                    } catch (Exception ex) {
+                        this.logger.log(ex.toString());
+                    }
+                });
+                observerInform.start();
+            }
+        }
+    }
+
+    private void notifyLevelChange() {
+        synchronized (this.observers) {
+            for (GameObserver observer : this.observers
+            ) {
+                Thread observerInform = new Thread(() ->
+                {
+                    try {
+                        observer.notifyLevelChange(this.level);
                     } catch (Exception ex) {
                         this.logger.log(ex.toString());
                     }
@@ -297,7 +329,7 @@ public class TheMindGame implements IGamePanel {
             if (this.status == GameStatus.GameOver)
                 return "Game Over";
             if (this.usedCards.stream().count() <= 0)
-                this.changeLevel(this.level + 1);
+                this.changeLevel();
             player.ForceToPlay1 = false;
             this.resetNinjas();
             return "Success";

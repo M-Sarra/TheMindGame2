@@ -32,7 +32,7 @@ public class Example {
                 }
 
                 @Override
-                public void statusChanged(GameStatus status) {
+                public void notifyStatusChange(GameStatus status) {
 
                 }
 
@@ -58,6 +58,11 @@ public class Example {
 
                 @Override
                 public void notifyJoin(String player) {
+
+                }
+
+                @Override
+                public void notifyLevelChange(int level) {
 
                 }
             };
