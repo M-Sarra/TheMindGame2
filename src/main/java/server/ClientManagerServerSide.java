@@ -275,7 +275,11 @@ public class ClientManagerServerSide extends Player implements Runnable {
 
     @Override
     public void notifyLevelChange(int level) {
-
+        String message = "Level changed:" +
+                "  level card: " + level +
+                "  hear cards: " + this.theMindGame.getHeartNumber() +
+                "  ninja cards:" + this.theMindGame.getNinjaCards();
+        transmitter.sendMessage(message);
     }
 
     @Override
