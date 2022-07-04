@@ -275,11 +275,15 @@ public class ClientManagerServerSide extends Player implements Runnable {
 
     @Override
     public void notifyLevelChange(int level) {
-        String message = "Level changed:" +
-                "  level card: " + level +
-                "  hear cards: " + this.theMindGame.getHeartNumber() +
-                "  ninja cards:" + this.theMindGame.getNinjaCards();
-        transmitter.sendMessage(message);
+        if (!this.hand.isEmpty()) this.hand.clear();
+        this.level++;
+        if (this.level > 1) {
+            String message = "Level changed:" +
+                    "  level card: " + level +
+                    "  hear cards: " + this.theMindGame.getHeartNumber() +
+                    "  ninja cards:" + this.theMindGame.getNinjaCards();
+            transmitter.sendMessage(message);
+        }
     }
 
     @Override
@@ -289,7 +293,6 @@ public class ClientManagerServerSide extends Player implements Runnable {
 
     @Override
     public void giveCard(Integer card) {
-        if (this.hand.isEmpty()) this.level++;
         this.hand.add(card);
         this.transmitter.sendMessage("card: " + card + " level: " + this.level);
     }

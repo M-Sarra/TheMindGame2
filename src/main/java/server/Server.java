@@ -1,5 +1,6 @@
 package server;
 
+import common.model.GameStatus;
 import server.log.Logger;
 import server.logic.GameController;
 import server.logic.TheMindGame;
@@ -50,7 +51,7 @@ public class Server {
     }
 
     protected static synchronized void joinToGame(ClientManagerServerSide client) {
-        if (gameController.isOpen()) {
+        if (isNotStarted()) {
             if (client.decideToJoin()) {
                 String game = returnAnExistingGame();
                 if (!game.equals("Game not found!")) {
@@ -75,12 +76,19 @@ public class Server {
         for (String gameName : gameController.getGames()) {
             TheMindGame game = gameController.getGameByName(gameName);
             if (game.isJoinable()) {
-
-                    return gameName;
-
+                return gameName;
             }
         }
         return "Game not found";
+    }
+
+    private static boolean isNotStarted() {
+        for (String game : gameController.getGames()) {
+            TheMindGame theMindGame = gameController.getGameByName(game);
+            if (theMindGame.getStatus() == GameStatus.NotStarted)
+                return true;
+        }
+        return false;
     }
 
     private int setPort() {
